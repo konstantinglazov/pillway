@@ -102,7 +102,7 @@ import { Pharmacy } from '../../../../core/models/booking.model';
       letter-spacing: .07em;
       color: var(--text-muted);
       padding: .7rem 1.15rem .3rem;
-      background: #f8fafc;
+      background: var(--surface-raised);
     }
 
     .summary-divider { height: 1px; background: var(--border); }

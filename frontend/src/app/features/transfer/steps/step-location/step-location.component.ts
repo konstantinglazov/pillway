@@ -101,7 +101,7 @@ import { TransferFormService } from '../../transfer-form.service';
       overflow: hidden;
       border: 1.5px solid var(--border);
       margin-bottom: .85rem;
-      background: #e8edf3;
+      background: var(--bg-sunken);
     }
 
     .map-container {
@@ -120,7 +120,7 @@ import { TransferFormService } from '../../transfer-form.service';
       gap: .5rem;
       font-size: .9rem;
       color: var(--text-muted);
-      background: #f1f5f9;
+      background: var(--surface-raised);
     }
 
     .map-skeleton-icon { font-size: 2rem; animation: pulse 2s ease-in-out infinite; }
@@ -169,7 +169,7 @@ import { TransferFormService } from '../../transfer-form.service';
       font-size: .875rem;
       color: var(--text-muted);
       padding: .65rem .9rem;
-      background: #f8fafc;
+      background: var(--surface-raised);
       border-radius: var(--radius-sm);
       border: 1px dashed var(--border);
       margin-bottom: .5rem;
@@ -186,7 +186,7 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private map?: google.maps.Map;
   private autocomplete?: google.maps.places.Autocomplete;
-  private marker?: google.maps.Marker;
+  private marker?: google.maps.marker.AdvancedMarkerElement;
 
   constructor(
     readonly formService: TransferFormService,
@@ -204,21 +204,20 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async initMap(): Promise<void> {
     try {
-      await new Loader({
-        apiKey: environment.googleMapsApiKey,
-        version: 'weekly',
-        libraries: ['places'],
-      }).load();
+      const loader = new Loader({ apiKey: environment.googleMapsApiKey, version: 'weekly' });
+      const { Map } = await loader.importLibrary('maps') as google.maps.MapsLibrary;
+      await loader.importLibrary('places');
+      await loader.importLibrary('marker');
 
-      this.mapLoading = false;
+      this.ngZone.run(() => { this.mapLoading = false; });
 
-      this.map = new google.maps.Map(this.mapContainerRef.nativeElement, {
+      this.map = new Map(this.mapContainerRef.nativeElement, {
         center: { lat: 43.6532, lng: -79.3832 },
         zoom: 12,
+        mapId: 'pillway-map',
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
-        styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }],
       });
 
       this.autocomplete = new google.maps.places.Autocomplete(this.searchInputRef.nativeElement, {
@@ -249,9 +248,10 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedPharmacy = { name, formatted_address };
 
     const position = { lat, lng };
-    if (this.marker) { this.marker.setPosition(position); }
-    else {
-      this.marker = new google.maps.Marker({ map: this.map, position, animation: google.maps.Animation.DROP });
+    if (this.marker) {
+      this.marker.position = position;
+    } else {
+      this.marker = new google.maps.marker.AdvancedMarkerElement({ map: this.map, position });
     }
     this.map?.panTo(position);
     this.map?.setZoom(15);

@@ -2,24 +2,46 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'pw-login',
   standalone: false,
   template: `
     <div class="page-center">
+      <button class="theme-toggle" (click)="theme.toggle()" [attr.aria-label]="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+        @if (theme.isDark) {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        }
+      </button>
       <div class="auth-shell">
 
         <!-- Left brand panel -->
         <aside class="auth-brand">
-          <div class="brand-logo">💊</div>
+          <div class="brand-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="M8.5 8.5 16 16"/></svg>
+          </div>
           <h1 class="brand-name">Pillway</h1>
           <p class="brand-tagline">Prescription transfers, simplified.</p>
           <ul class="brand-features">
-            <li><span>🔒</span> Secure &amp; private</li>
-            <li><span>⚡</span> Transfers in minutes</li>
-            <li><span>📍</span> Find nearby pharmacies</li>
-            <li><span>💊</span> All prescription types</li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Secure &amp; private
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Transfers in minutes
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Find nearby pharmacies
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="M8.5 8.5 16 16"/></svg>
+              All prescription types
+            </li>
           </ul>
         </aside>
 
@@ -106,8 +128,17 @@ import { AuthService } from '../../core/services/auth.service';
       gap: .6rem;
     }
 
-    .brand-logo { font-size: 2.5rem; line-height: 1; }
-    .brand-name { font-size: 1.85rem; font-weight: 800; letter-spacing: -.03em; }
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,.15);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      svg { width: 28px; height: 28px; }
+    }
+    .brand-name { font-size: 1.85rem; font-weight: 800; letter-spacing: -.03em; margin-top: .25rem; }
     .brand-tagline { font-size: .9rem; opacity: .8; margin-bottom: 1.25rem; }
 
     .brand-features {
@@ -123,7 +154,28 @@ import { AuthService } from '../../core/services/auth.service';
         font-size: .88rem;
         opacity: .9;
         font-weight: 500;
+        svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .9; }
       }
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.1);
+      backdrop-filter: blur(8px);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      svg { width: 16px; height: 16px; }
+      &:hover { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.4); }
     }
 
     .auth-form-panel {
@@ -143,7 +195,7 @@ import { AuthService } from '../../core/services/auth.service';
 
     .tab-bar {
       display: flex;
-      background: #f1f5f9;
+      background: var(--bg);
       border-radius: var(--radius-sm);
       padding: 3px;
       margin-bottom: 1.4rem;
@@ -200,6 +252,7 @@ export class LoginComponent {
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly router: Router,
+    readonly theme: ThemeService,
   ) {
     this.form = this.fb.group({
       fullName: [''],

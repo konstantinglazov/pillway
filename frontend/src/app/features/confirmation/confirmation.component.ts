@@ -115,7 +115,7 @@ import { Router } from '@angular/router';
       gap: 0;
       margin-bottom: 2rem;
       padding: 1.15rem 1.25rem;
-      background: #f8fafc;
+      background: var(--surface-raised);
       border-radius: 10px;
       border: 1.5px solid var(--border);
     }

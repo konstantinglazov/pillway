@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 interface Step { label: string; path: string; }
 
@@ -11,9 +12,19 @@ interface Step { label: string; path: string; }
     <div class="transfer-page">
 
       <header class="topbar">
-        <span class="topbar-brand">💊 Pillway</span>
+        <span class="topbar-brand">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="M8.5 8.5 16 16"/></svg>
+          Pillway
+        </span>
         <div class="topbar-right">
           <span class="step-counter">Step {{ activeIndex + 1 }} of {{ steps.length }}</span>
+          <button class="btn btn-ghost btn-icon btn-sm" (click)="theme.toggle()" [attr.aria-label]="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+            @if (theme.isDark) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            }
+          </button>
           <button class="btn btn-ghost btn-sm" (click)="logout()">Sign Out</button>
         </div>
       </header>
@@ -68,6 +79,23 @@ interface Step { label: string; path: string; }
       font-weight: 800;
       color: var(--primary);
       letter-spacing: -.02em;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .brand-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: var(--radius-xs);
+      svg { width: 16px; height: 16px; }
     }
 
     .topbar-right {
@@ -172,6 +200,7 @@ export class TransferComponent {
   constructor(
     private readonly router: Router,
     private readonly authService: AuthService,
+    readonly theme: ThemeService,
   ) {}
 
   get activeIndex(): number {

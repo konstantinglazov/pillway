@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'pw-root',
@@ -6,4 +7,6 @@ import { Component } from '@angular/core';
   template: `<router-outlet></router-outlet>`,
   styles: [],
 })
-export class AppComponent {}
+export class AppComponent {
+  constructor(readonly theme: ThemeService) {}
+}
