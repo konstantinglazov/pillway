@@ -4,11 +4,12 @@
 *.env.production
 *.env.development.local
 
-# Frontend env file with real keys (generated into environment.ts at build time)
+# Frontend env files with real keys (generated into environment*.ts at build time)
 frontend/.env
 
-# Generated environment file — contains real keys, never commit
+# Generated environment files — written by scripts/generate-env.js, never commit
 frontend/src/environments/environment.ts
+frontend/src/environments/environment.prod.ts
 
 # Dependencies
 node_modules/
