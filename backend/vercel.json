@@ -1,5 +1,15 @@
 {
   "version": 2,
   "builds": [{ "src": "src/index.ts", "use": "@vercel/node" }],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "https://pillway-tawny.vercel.app" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
+  ],
   "routes": [{ "src": "/(.*)", "dest": "src/index.ts" }]
 }

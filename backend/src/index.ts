@@ -13,8 +13,10 @@ const PORT = process.env['PORT'] ?? 3000;
 const FRONTEND_URL = process.env['FRONTEND_URL'] ?? 'http://localhost:4200';
 
 const corsOptions = { origin: FRONTEND_URL, methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] };
-app.options('*', cors(corsOptions));
-app.use(cors(corsOptions));
+if (process.env['NODE_ENV'] !== 'production') {
+  app.options('*', cors(corsOptions));
+  app.use(cors(corsOptions));
+}
 app.use(express.json());
 
 app.get('/health', (_req, res) => {
