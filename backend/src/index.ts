@@ -12,7 +12,9 @@ const app = express();
 const PORT = process.env['PORT'] ?? 3000;
 const FRONTEND_URL = process.env['FRONTEND_URL'] ?? 'http://localhost:4200';
 
-app.use(cors({ origin: FRONTEND_URL, methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
+const corsOptions = { origin: FRONTEND_URL, methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] };
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get('/health', (_req, res) => {
