@@ -1,0 +1,74 @@
+// Pillway — Prisma Schema
+// Database: Supabase (PostgreSQL). Connect via the connection string from
+// Supabase dashboard → Settings → Database → Connection string (URI mode).
+//
+// After any schema change run:
+//   npx prisma generate          — regenerates the PrismaClient types
+//   npx prisma db push           — syncs the schema to the DB (dev)
+//   npx prisma migrate dev       — creates a tracked migration (recommended)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// In Prisma 7 the connection URL is configured in prisma.config.ts (for the
+// CLI) and via the driver adapter passed to PrismaClient (for the runtime).
+// The datasource block only declares the provider now.
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Profile
+// Mirrors auth.users so application queries stay in the public schema.
+// Populated automatically by the Supabase trigger in 001_initial_schema.sql.
+// ---------------------------------------------------------------------------
+model Profile {
+  id        String    @id @db.Uuid
+  fullName  String?   @map("full_name")
+  email     String?
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  bookings  Booking[]
+
+  @@map("profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Pharmacy
+// Sourced from the Google Places API. Deduplicated by placeId so the same
+// pharmacy is never stored twice even when selected by multiple users.
+// ---------------------------------------------------------------------------
+model Pharmacy {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  formattedAddress String   @map("formatted_address")
+  lat              Float
+  lng              Float
+  placeId          String   @unique @map("place_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  bookings         Booking[]
+
+  @@map("pharmacies")
+}
+
+// ---------------------------------------------------------------------------
+// Booking
+// Represents one prescription transfer / service request by a user.
+// ---------------------------------------------------------------------------
+model Booking {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String   @map("user_id") @db.Uuid
+  pharmacyId         String   @map("pharmacy_id") @db.Uuid
+  serviceType        String   @map("service_type")
+  additionalServices String[] @map("additional_services")
+  prescriptionNotes  String?  @map("prescription_notes")
+  status             String   @default("pending")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  user     Profile  @relation(fields: [userId], references: [id])
+  pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id])
+
+  @@map("bookings")
+}
