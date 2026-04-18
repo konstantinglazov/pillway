@@ -7,6 +7,9 @@
 # Frontend env file with real keys (generated into environment.ts at build time)
 frontend/.env
 
+# Generated environment file — contains real keys, never commit
+frontend/src/environments/environment.ts
+
 # Dependencies
 node_modules/
 **/node_modules/
