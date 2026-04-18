@@ -2,6 +2,6 @@
   "framework": null,
   "buildCommand": "npm run build:prod",
   "outputDirectory": "dist/pillway",
-  "installCommand": "npm install",
+  "installCommand": "npm install --include=dev",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
