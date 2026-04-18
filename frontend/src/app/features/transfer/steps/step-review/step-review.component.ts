@@ -5,24 +5,13 @@ import { TransferFormService } from '../../transfer-form.service';
 import { BookingService } from '../../../../core/services/booking.service';
 import { Pharmacy } from '../../../../core/models/booking.model';
 
-/**
- * Step 3 — Review & Submit.
- *
- * Submit flow:
- *   1. Show loading spinner and disable Confirm button.
- *   2. Call BookingService.createBooking() — an HTTP POST to Express.
- *   3. On success: reset form state, show success banner, auto-navigate to
- *      /confirmation after 2 seconds.
- *   4. On error: show a dismissible error toast with the server message.
- */
 @Component({
   selector: 'pw-step-review',
   template: `
-    <h2 class="step-heading">Step 3 — Review Your Order</h2>
-
     <!-- Success banner -->
-    <div *ngIf="showSuccess" class="success-banner">
-      Booking confirmed! Redirecting you to the confirmation page…
+    <div *ngIf="showSuccess" class="alert alert-success success-anim">
+      <span>🎉</span>
+      <span>Booking confirmed! Redirecting to confirmation…</span>
     </div>
 
     <!-- Error toast -->
@@ -31,119 +20,121 @@ import { Pharmacy } from '../../../../core/models/booking.model';
       <button class="dismiss-btn" (click)="errorMessage = null">✕</button>
     </div>
 
-    <!-- Summary card -->
-    <div class="summary-section">
+    <h2 class="step-heading">Review Your Order</h2>
+    <p class="step-subheading">Please confirm the details below before submitting.</p>
+
+    <!-- Summary -->
+    <div class="summary-card">
+
+      <div class="summary-section-title">Service</div>
       <div class="summary-row">
-        <span class="summary-label">Service Type</span>
-        <span class="summary-value">{{ serviceType }}</span>
+        <span class="summary-icon">🔄</span>
+        <div class="summary-body">
+          <div class="summary-label">Service Type</div>
+          <div class="summary-value">{{ serviceType || '—' }}</div>
+        </div>
       </div>
 
-      <div class="summary-row">
-        <span class="summary-label">Additional Services</span>
-        <span class="summary-value">{{ selectedServicesDisplay }}</span>
+      <div class="summary-row" *ngIf="selectedServicesDisplay !== 'None'">
+        <span class="summary-icon">➕</span>
+        <div class="summary-body">
+          <div class="summary-label">Add-ons</div>
+          <div class="summary-value">{{ selectedServicesDisplay }}</div>
+        </div>
       </div>
 
       <div class="summary-row" *ngIf="prescriptionNotes">
-        <span class="summary-label">Prescription Notes</span>
-        <span class="summary-value">{{ prescriptionNotes }}</span>
+        <span class="summary-icon">📋</span>
+        <div class="summary-body">
+          <div class="summary-label">Notes</div>
+          <div class="summary-value">{{ prescriptionNotes }}</div>
+        </div>
       </div>
 
+      <div class="summary-divider"></div>
+
+      <div class="summary-section-title">Pharmacy</div>
       <div class="summary-row">
-        <span class="summary-label">Pharmacy</span>
-        <span class="summary-value">
-          <strong>{{ pharmacy?.name }}</strong><br />
-          {{ pharmacy?.formatted_address }}
-        </span>
+        <span class="summary-icon">📍</span>
+        <div class="summary-body">
+          <div class="summary-label">{{ pharmacy?.name }}</div>
+          <div class="summary-value muted">{{ pharmacy?.formatted_address }}</div>
+        </div>
       </div>
+
     </div>
 
-    <!-- Navigation -->
     <div class="step-actions">
-      <button
-        type="button"
-        class="btn btn-secondary"
-        [disabled]="isSubmitting"
-        (click)="onBack()"
-      >
-        Back
+      <button type="button" class="btn btn-secondary" [disabled]="isSubmitting" (click)="onBack()">
+        ← Back
       </button>
-
-      <button
-        type="button"
-        class="btn btn-primary"
-        [disabled]="isSubmitting"
-        (click)="onConfirm()"
-      >
+      <button type="button" class="btn btn-primary btn-lg" [disabled]="isSubmitting" (click)="onConfirm()">
         <span *ngIf="isSubmitting" class="spinner"></span>
-        <span>{{ isSubmitting ? 'Submitting…' : 'Confirm Order' }}</span>
+        <span>{{ isSubmitting ? 'Submitting…' : 'Confirm & Submit →' }}</span>
       </button>
     </div>
   `,
   styles: [`
-    .step-heading {
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      color: #1a1a2e;
+    .success-anim { animation: slideUp .3s ease; }
+
+    .summary-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.75rem;
+      background: var(--surface);
     }
 
-    .summary-section {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      border: 1px solid #dee2e6;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 2rem;
+    .summary-section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-muted);
+      padding: .75rem 1.1rem .4rem;
+      background: #f8fafc;
+    }
+
+    .summary-divider {
+      height: 1px;
+      background: var(--border);
+      margin: .25rem 0;
     }
 
     .summary-row {
       display: flex;
-      gap: 1rem;
-      padding: 0.9rem 1.1rem;
-      border-bottom: 1px solid #dee2e6;
+      align-items: flex-start;
+      gap: .85rem;
+      padding: .85rem 1.1rem;
+      border-bottom: 1px solid var(--border);
 
       &:last-child { border-bottom: none; }
+    }
 
-      &:nth-child(even) { background: #f8f9fa; }
+    .summary-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      margin-top: .05rem;
+    }
+
+    .summary-body {
+      display: flex;
+      flex-direction: column;
+      gap: .18rem;
     }
 
     .summary-label {
-      flex: 0 0 160px;
-      font-weight: 600;
-      color: #495057;
-      font-size: 0.9rem;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--text);
     }
 
     .summary-value {
-      flex: 1;
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
+      font-size: .9rem;
+      color: var(--text);
+      line-height: 1.45;
 
-    .step-actions {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.75rem;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      color: #fff;
-      font-weight: 500;
-      z-index: 9999;
-      max-width: 380px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-
-      &.toast-error { background: #dc3545; }
+      &.muted { color: var(--text-muted); font-size: .82rem; }
     }
 
     .dismiss-btn {
@@ -154,6 +145,9 @@ import { Pharmacy } from '../../../../core/models/booking.model';
       cursor: pointer;
       padding: 0;
       line-height: 1;
+      opacity: .85;
+
+      &:hover { opacity: 1; }
     }
   `],
 })
@@ -177,19 +171,11 @@ export class StepReviewComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.updateSummary();
-
-    // Re-render the summary whenever the form value changes (e.g. user navigates
-    // back and changes a preference, then returns to this step).
-    this.formSub = this.formService.formValue$.subscribe(() => {
-      this.updateSummary();
-    });
+    this.formSub = this.formService.formValue$.subscribe(() => this.updateSummary());
   }
 
-  ngOnDestroy(): void {
-    this.formSub?.unsubscribe();
-  }
+  ngOnDestroy(): void { this.formSub?.unsubscribe(); }
 
-  /** Pulls current values from the service and populates the summary fields. */
   private updateSummary(): void {
     const v = this.formService.form.value as {
       serviceType: string;
@@ -205,19 +191,8 @@ export class StepReviewComponent implements OnInit, OnDestroy {
     this.selectedServicesDisplay = selected.length > 0 ? selected.join(', ') : 'None';
   }
 
-  onBack(): void {
-    this.router.navigate(['/transfer/location']);
-  }
+  onBack(): void { this.router.navigate(['/transfer/location']); }
 
-  /**
-   * Submits the booking to the Express API.
-   *
-   * Flow:
-   *   1. Disable UI to prevent double-submit.
-   *   2. BookingService fetches the user's session UUID and POSTs to /api/bookings.
-   *   3. On success: reset form, show banner, redirect after 2 s.
-   *   4. On error: surface the server message in a dismissible toast.
-   */
   onConfirm(): void {
     if (this.isSubmitting) return;
 

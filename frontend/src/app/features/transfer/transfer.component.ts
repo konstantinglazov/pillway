@@ -1,129 +1,155 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 
-interface Step {
-  label: string;
-  path: string;
-}
+interface Step { label: string; path: string; icon: string; }
 
-/**
- * Shell component for the multi-step transfer flow.
- * Renders a step indicator bar and a <router-outlet> for child step components.
- * Does not own any form state — that lives in TransferFormService.
- */
 @Component({
   selector: 'pw-transfer',
   template: `
-    <div class="container">
-      <h1 class="flow-title">Prescription Transfer</h1>
+    <div class="transfer-page">
 
-      <!-- Step indicator -->
-      <nav class="step-indicator" aria-label="Transfer steps">
-        <div
-          *ngFor="let step of steps; let i = index"
-          class="step-item"
-          [class.active]="isActive(step.path)"
-          [class.completed]="isCompleted(i)"
-        >
-          <span class="step-number">{{ i + 1 }}</span>
-          <span class="step-label">{{ step.label }}</span>
+      <!-- Top bar -->
+      <header class="topbar">
+        <span class="topbar-brand">💊 Pillway</span>
+      </header>
+
+      <div class="container">
+        <h1 class="page-title">Prescription Transfer</h1>
+
+        <!-- Step indicator -->
+        <div class="stepper">
+          <ng-container *ngFor="let step of steps; let i = index; let last = last">
+            <div class="stepper-item"
+                 [class.active]="isActive(step.path)"
+                 [class.done]="isCompleted(i)">
+              <div class="stepper-circle">
+                <span *ngIf="!isCompleted(i)">{{ i + 1 }}</span>
+                <span *ngIf="isCompleted(i)">✓</span>
+              </div>
+              <span class="stepper-label">{{ step.label }}</span>
+            </div>
+            <div *ngIf="!last" class="stepper-line" [class.done]="isCompleted(i)"></div>
+          </ng-container>
         </div>
-      </nav>
 
-      <!-- Active step rendered here -->
-      <div class="step-content card">
-        <router-outlet></router-outlet>
+        <!-- Active step -->
+        <div class="step-card card">
+          <router-outlet></router-outlet>
+        </div>
       </div>
     </div>
   `,
   styles: [`
-    .flow-title {
-      font-size: 1.75rem;
+    .transfer-page { min-height: 100vh; background: var(--bg); }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow);
+    }
+
+    .topbar-brand {
+      font-size: 1.15rem;
       font-weight: 700;
-      margin-bottom: 1.5rem;
-      color: #1a1a2e;
+      color: var(--primary);
+      letter-spacing: -.01em;
     }
 
-    .step-indicator {
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 1.75rem;
+      letter-spacing: -.02em;
+    }
+
+    /* ── Stepper ── */
+    .stepper {
       display: flex;
-      gap: 0;
-      margin-bottom: 2rem;
-      counter-reset: step;
+      align-items: center;
+      margin-bottom: 1.75rem;
     }
 
-    .step-item {
-      flex: 1;
+    .stepper-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.35rem;
-      position: relative;
-      padding-bottom: 0.5rem;
-
-      &::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: #dee2e6;
-        border-radius: 2px;
-      }
-
-      &.active::after  { background: #0d6efd; }
-      &.completed::after { background: #198754; }
+      gap: .4rem;
+      flex-shrink: 0;
     }
 
-    .step-number {
-      width: 32px;
-      height: 32px;
+    .stepper-circle {
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: #dee2e6;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: .85rem;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      transition: all .25s ease;
+
+      .active & {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 0 0 4px rgba(37,99,235,.15);
+      }
+
+      .done & {
+        border-color: var(--success);
+        background: var(--success);
+        color: #fff;
+      }
+    }
+
+    .stepper-label {
+      font-size: .75rem;
       font-weight: 600;
-      font-size: 0.9rem;
-      transition: background 0.2s;
+      color: var(--text-muted);
+      white-space: nowrap;
 
-      .active &   { background: #0d6efd; color: #fff; }
-      .completed & { background: #198754; color: #fff; }
+      .active & { color: var(--primary); }
+      .done &   { color: var(--success); }
     }
 
-    .step-label {
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: #6c757d;
+    .stepper-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      margin: 0 .5rem;
+      margin-bottom: 1.3rem;
+      border-radius: 2px;
+      transition: background .25s ease;
 
-      .active &   { color: #0d6efd; }
-      .completed & { color: #198754; }
+      &.done { background: var(--success); }
     }
 
-    .step-content {
-      margin-top: 0.5rem;
-    }
+    .step-card { padding: 2rem; }
   `],
 })
 export class TransferComponent {
   readonly steps: Step[] = [
-    { label: 'Preferences', path: 'preferences' },
-    { label: 'Location', path: 'location' },
-    { label: 'Review', path: 'review' },
+    { label: 'Preferences', path: 'preferences', icon: '📋' },
+    { label: 'Location',    path: 'location',    icon: '📍' },
+    { label: 'Review',      path: 'review',      icon: '✅' },
   ];
 
   constructor(private readonly router: Router) {}
 
-  /** True when the router URL contains this step's path segment. */
   isActive(path: string): boolean {
     return this.router.url.includes(`/transfer/${path}`);
   }
 
-  /** True for all steps before the currently active one. */
   isCompleted(index: number): boolean {
-    const activeIndex = this.steps.findIndex((s) =>
-      this.router.url.includes(`/transfer/${s.path}`)
-    );
+    const activeIndex = this.steps.findIndex(s => this.router.url.includes(`/transfer/${s.path}`));
     return activeIndex > index;
   }
 }
