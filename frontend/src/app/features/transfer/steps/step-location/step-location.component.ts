@@ -186,7 +186,8 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private map?: google.maps.Map;
   private autocomplete?: google.maps.places.Autocomplete;
-  private marker?: google.maps.marker.AdvancedMarkerElement;
+  // eslint-disable-next-line deprecation/deprecation
+  private marker?: google.maps.Marker;
 
   constructor(
     readonly formService: TransferFormService,
@@ -207,17 +208,16 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
       const loader = new Loader({ apiKey: environment.googleMapsApiKey, version: 'weekly' });
       const { Map } = await loader.importLibrary('maps') as google.maps.MapsLibrary;
       await loader.importLibrary('places');
-      await loader.importLibrary('marker');
 
       this.ngZone.run(() => { this.mapLoading = false; });
 
       this.map = new Map(this.mapContainerRef.nativeElement, {
         center: { lat: 43.6532, lng: -79.3832 },
         zoom: 12,
-        mapId: 'pillway-map',
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
+        styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }],
       });
 
       this.autocomplete = new google.maps.places.Autocomplete(this.searchInputRef.nativeElement, {
@@ -249,9 +249,10 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const position = { lat, lng };
     if (this.marker) {
-      this.marker.position = position;
+      this.marker.setPosition(position);
     } else {
-      this.marker = new google.maps.marker.AdvancedMarkerElement({ map: this.map, position });
+      // eslint-disable-next-line deprecation/deprecation
+      this.marker = new google.maps.Marker({ map: this.map, position, animation: google.maps.Animation.DROP });
     }
     this.map?.panTo(position);
     this.map?.setZoom(15);
