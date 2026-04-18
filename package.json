@@ -1,0 +1,17 @@
+{
+  "name": "pillway",
+  "version": "1.0.0",
+  "description": "Location-based prescription transfer app — Angular + Express + Prisma + Supabase",
+  "private": true,
+  "scripts": {
+    "start":          "concurrently -n API,APP -c blue,green \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend":  "npm --prefix backend run dev",
+    "start:frontend": "npm --prefix frontend start",
+    "install:all":    "npm --prefix backend install && npm --prefix frontend install",
+    "db:push":        "npm --prefix backend run db:push",
+    "db:migrate":     "npm --prefix backend run db:migrate-security"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
