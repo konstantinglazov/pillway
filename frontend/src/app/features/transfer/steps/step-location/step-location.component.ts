@@ -29,7 +29,8 @@ import { TransferFormService } from '../../transfer-form.service';
       }
       @if (mapError) {
         <div class="map-error">
-          <span>⚠</span> Map failed to load. Please check your connection.
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Map failed — check API key restrictions &amp; enabled APIs in Cloud Console. See browser console for details.
         </div>
       }
       <div #mapContainer class="map-container" [class.map-hidden]="mapLoading || mapError"
@@ -204,9 +205,17 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {}
 
   private async initMap(): Promise<void> {
+    // gm_authFailure is Google's global hook for key/billing errors. It fires
+    // instead of rejecting the importLibrary promise, so we must race against it.
+    const authFailure = new Promise<never>((_, reject) => {
+      (window as typeof window & { gm_authFailure?(): void }).gm_authFailure = () =>
+        reject(new Error('API key invalid or missing required Google Cloud permissions.'));
+    });
+
     try {
       const loader = new Loader({ apiKey: environment.googleMapsApiKey, version: 'weekly' });
-      const { Map } = await loader.importLibrary('maps') as google.maps.MapsLibrary;
+      const mapsLib = await Promise.race([loader.importLibrary('maps'), authFailure]);
+      const { Map } = mapsLib as google.maps.MapsLibrary;
       await loader.importLibrary('places');
 
       this.ngZone.run(() => { this.mapLoading = false; });
@@ -230,7 +239,7 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
         this.ngZone.run(() => this.onPlaceChanged());
       });
     } catch (err) {
-      console.error('Google Maps failed to load:', err);
+      console.error('[Maps]', err);
       this.ngZone.run(() => { this.mapLoading = false; this.mapError = true; });
     }
   }
