@@ -7,83 +7,93 @@ import { Pharmacy } from '../../../../core/models/booking.model';
 
 @Component({
   selector: 'pw-step-review',
+  standalone: false,
   template: `
-    <!-- Success banner -->
-    <div *ngIf="showSuccess" class="alert alert-success success-anim">
-      <span>🎉</span>
-      <span>Booking confirmed! Redirecting to confirmation…</span>
-    </div>
-
-    <!-- Error toast -->
-    <div *ngIf="errorMessage" class="toast toast-error">
-      <span>{{ errorMessage }}</span>
-      <button class="dismiss-btn" (click)="errorMessage = null">✕</button>
-    </div>
+    @if (showSuccess) {
+      <div class="alert alert-success">🎉 Booking confirmed! Redirecting…</div>
+    }
+    @if (errorMessage) {
+      <div class="toast toast-error">
+        <span>{{ errorMessage }}</span>
+        <button class="toast-close" (click)="errorMessage = null">✕</button>
+      </div>
+    }
 
     <h2 class="step-heading">Review Your Order</h2>
-    <p class="step-subheading">Please confirm the details below before submitting.</p>
+    <p class="step-subheading">Confirm the details below before submitting.</p>
 
-    <!-- Summary -->
     <div class="summary-card">
 
-      <div class="summary-section-title">Service</div>
-      <div class="summary-row">
-        <span class="summary-icon">🔄</span>
-        <div class="summary-body">
-          <div class="summary-label">Service Type</div>
-          <div class="summary-value">{{ serviceType || '—' }}</div>
+      <div class="summary-section">
+        <div class="summary-section-title">Service</div>
+        <div class="summary-row">
+          <span class="summary-icon">🔄</span>
+          <div>
+            <div class="summary-label">Type</div>
+            <div class="summary-value">{{ serviceType || '—' }}</div>
+          </div>
         </div>
-      </div>
 
-      <div class="summary-row" *ngIf="selectedServicesDisplay !== 'None'">
-        <span class="summary-icon">➕</span>
-        <div class="summary-body">
-          <div class="summary-label">Add-ons</div>
-          <div class="summary-value">{{ selectedServicesDisplay }}</div>
-        </div>
-      </div>
+        @if (selectedServicesDisplay !== 'None') {
+          <div class="summary-row">
+            <span class="summary-icon">➕</span>
+            <div>
+              <div class="summary-label">Add-ons</div>
+              <div class="summary-value">{{ selectedServicesDisplay }}</div>
+            </div>
+          </div>
+        }
 
-      <div class="summary-row" *ngIf="prescriptionNotes">
-        <span class="summary-icon">📋</span>
-        <div class="summary-body">
-          <div class="summary-label">Notes</div>
-          <div class="summary-value">{{ prescriptionNotes }}</div>
-        </div>
+        @if (prescriptionNotes) {
+          <div class="summary-row">
+            <span class="summary-icon">📋</span>
+            <div>
+              <div class="summary-label">Notes</div>
+              <div class="summary-value">{{ prescriptionNotes }}</div>
+            </div>
+          </div>
+        }
       </div>
 
       <div class="summary-divider"></div>
 
-      <div class="summary-section-title">Pharmacy</div>
-      <div class="summary-row">
-        <span class="summary-icon">📍</span>
-        <div class="summary-body">
-          <div class="summary-label">{{ pharmacy?.name }}</div>
-          <div class="summary-value muted">{{ pharmacy?.formatted_address }}</div>
+      <div class="summary-section">
+        <div class="summary-section-title">Pharmacy</div>
+        <div class="summary-row">
+          <span class="summary-icon">📍</span>
+          <div>
+            <div class="summary-label">{{ pharmacy?.name }}</div>
+            <div class="summary-value muted">{{ pharmacy?.formatted_address }}</div>
+          </div>
         </div>
       </div>
 
     </div>
 
     <div class="step-actions">
-      <button type="button" class="btn btn-secondary" [disabled]="isSubmitting" (click)="onBack()">
-        ← Back
-      </button>
+      <button type="button" class="btn btn-secondary" [disabled]="isSubmitting" (click)="onBack()">← Back</button>
       <button type="button" class="btn btn-primary btn-lg" [disabled]="isSubmitting" (click)="onConfirm()">
-        <span *ngIf="isSubmitting" class="spinner"></span>
-        <span>{{ isSubmitting ? 'Submitting…' : 'Confirm & Submit →' }}</span>
+        @if (isSubmitting) { <span class="spinner"></span> }
+        {{ isSubmitting ? 'Submitting…' : 'Confirm & Submit' }}
       </button>
     </div>
   `,
   styles: [`
-    .success-anim { animation: slideUp .3s ease; }
+    .toast-close {
+      background: none; border: none; color: #fff; font-size: 1rem;
+      cursor: pointer; padding: 0; opacity: .8; flex-shrink: 0;
+      &:hover { opacity: 1; }
+    }
 
     .summary-card {
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      margin-bottom: 1.75rem;
+      margin-bottom: 1.5rem;
       background: var(--surface);
     }
+
+    .summary-section { padding: .25rem 0; }
 
     .summary-section-title {
       font-size: .7rem;
@@ -91,64 +101,25 @@ import { Pharmacy } from '../../../../core/models/booking.model';
       text-transform: uppercase;
       letter-spacing: .07em;
       color: var(--text-muted);
-      padding: .75rem 1.1rem .4rem;
+      padding: .7rem 1.15rem .3rem;
       background: #f8fafc;
     }
 
-    .summary-divider {
-      height: 1px;
-      background: var(--border);
-      margin: .25rem 0;
-    }
+    .summary-divider { height: 1px; background: var(--border); }
 
     .summary-row {
       display: flex;
       align-items: flex-start;
       gap: .85rem;
-      padding: .85rem 1.1rem;
+      padding: .8rem 1.15rem;
       border-bottom: 1px solid var(--border);
-
       &:last-child { border-bottom: none; }
     }
 
-    .summary-icon {
-      font-size: 1.1rem;
-      flex-shrink: 0;
-      margin-top: .05rem;
-    }
+    .summary-icon { font-size: 1.05rem; flex-shrink: 0; margin-top: .05rem; }
 
-    .summary-body {
-      display: flex;
-      flex-direction: column;
-      gap: .18rem;
-    }
-
-    .summary-label {
-      font-size: .82rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .summary-value {
-      font-size: .9rem;
-      color: var(--text);
-      line-height: 1.45;
-
-      &.muted { color: var(--text-muted); font-size: .82rem; }
-    }
-
-    .dismiss-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 1.1rem;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      opacity: .85;
-
-      &:hover { opacity: 1; }
-    }
+    .summary-label { font-size: .78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .15rem; }
+    .summary-value { font-size: .9rem; color: var(--text); line-height: 1.45; &.muted { color: var(--text-muted); font-size: .82rem; } }
   `],
 })
 export class StepReviewComponent implements OnInit, OnDestroy {
@@ -158,7 +129,7 @@ export class StepReviewComponent implements OnInit, OnDestroy {
   pharmacy: Pharmacy | null = null;
 
   isSubmitting = false;
-  showSuccess = false;
+  showSuccess  = false;
   errorMessage: string | null = null;
 
   private formSub?: Subscription;
@@ -166,7 +137,7 @@ export class StepReviewComponent implements OnInit, OnDestroy {
   constructor(
     private readonly formService: TransferFormService,
     private readonly bookingService: BookingService,
-    private readonly router: Router
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -177,16 +148,10 @@ export class StepReviewComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.formSub?.unsubscribe(); }
 
   private updateSummary(): void {
-    const v = this.formService.form.value as {
-      serviceType: string;
-      prescriptionNotes: string;
-      pharmacy: Pharmacy;
-    };
-
+    const v = this.formService.form.value as { serviceType: string; prescriptionNotes: string; pharmacy: Pharmacy };
     this.serviceType = v.serviceType ?? '';
     this.prescriptionNotes = v.prescriptionNotes ?? '';
     this.pharmacy = v.pharmacy ?? null;
-
     const selected = this.formService.getSelectedServices();
     this.selectedServicesDisplay = selected.length > 0 ? selected.join(', ') : 'None';
   }
@@ -195,34 +160,27 @@ export class StepReviewComponent implements OnInit, OnDestroy {
 
   onConfirm(): void {
     if (this.isSubmitting) return;
-
     this.isSubmitting = true;
     this.errorMessage = null;
 
-    const formValue = this.formService.form.value as {
-      serviceType: string;
-      prescriptionNotes: string;
-      pharmacy: Pharmacy;
-    };
+    const v = this.formService.form.value as { serviceType: string; prescriptionNotes: string; pharmacy: Pharmacy };
 
-    this.bookingService
-      .createBooking({
-        pharmacy:             formValue.pharmacy,
-        service_type:         formValue.serviceType,
-        additional_services:  this.formService.getSelectedServices(),
-        prescription_notes:   formValue.prescriptionNotes || undefined,
-      })
-      .subscribe({
-        next: () => {
-          this.isSubmitting = false;
-          this.showSuccess = true;
-          this.formService.reset();
-          setTimeout(() => this.router.navigate(['/confirmation']), 2000);
-        },
-        error: (err: Error) => {
-          this.isSubmitting = false;
-          this.errorMessage = err.message ?? 'An unexpected error occurred. Please try again.';
-        },
-      });
+    this.bookingService.createBooking({
+      pharmacy:            v.pharmacy,
+      service_type:        v.serviceType,
+      additional_services: this.formService.getSelectedServices(),
+      prescription_notes:  v.prescriptionNotes || undefined,
+    }).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.showSuccess = true;
+        this.formService.reset();
+        setTimeout(() => this.router.navigate(['/confirmation']), 2000);
+      },
+      error: (err: Error) => {
+        this.isSubmitting = false;
+        this.errorMessage = err.message ?? 'An unexpected error occurred. Please try again.';
+      },
+    });
   }
 }

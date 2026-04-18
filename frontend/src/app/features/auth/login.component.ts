@@ -5,92 +5,201 @@ import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'pw-login',
+  standalone: false,
   template: `
     <div class="page-center">
-      <div class="auth-card card">
+      <div class="auth-shell">
 
-        <div class="brand">
-          <div class="brand-icon">💊</div>
+        <!-- Left brand panel -->
+        <aside class="auth-brand">
+          <div class="brand-logo">💊</div>
           <h1 class="brand-name">Pillway</h1>
-          <p class="brand-tagline">Prescription transfers made simple</p>
-        </div>
+          <p class="brand-tagline">Prescription transfers, simplified.</p>
+          <ul class="brand-features">
+            <li><span>🔒</span> Secure &amp; private</li>
+            <li><span>⚡</span> Transfers in minutes</li>
+            <li><span>📍</span> Find nearby pharmacies</li>
+            <li><span>💊</span> All prescription types</li>
+          </ul>
+        </aside>
 
-        <div class="tab-bar">
-          <button class="tab" [class.tab-active]="!isSignUp" (click)="setMode(false)">Sign In</button>
-          <button class="tab" [class.tab-active]="isSignUp"  (click)="setMode(true)">Create Account</button>
-        </div>
+        <!-- Right form panel -->
+        <div class="auth-form-panel card">
 
-        <div *ngIf="errorMessage" class="alert alert-error">
-          <span>⚠️</span> {{ errorMessage }}
-        </div>
-
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-          <div class="form-field" *ngIf="isSignUp">
-            <label for="fullName">Full Name</label>
-            <input id="fullName" type="text" formControlName="fullName" placeholder="Jane Smith" />
+          <div class="auth-header">
+            <h2>{{ isSignUp ? 'Create account' : 'Welcome back' }}</h2>
+            <p>{{ isSignUp ? 'Start your first prescription transfer.' : 'Sign in to manage your transfers.' }}</p>
           </div>
 
-          <div class="form-field">
-            <label for="email">Email</label>
-            <input id="email" type="email" formControlName="email"
-              placeholder="you@example.com"
-              [class.is-invalid]="isInvalid('email')" />
-            <div class="field-error" *ngIf="isInvalid('email')">Enter a valid email address.</div>
+          <div class="tab-bar" role="tablist">
+            <button role="tab" class="tab" [class.tab-active]="!isSignUp" (click)="setMode(false)">Sign In</button>
+            <button role="tab" class="tab" [class.tab-active]="isSignUp"  (click)="setMode(true)">Create Account</button>
           </div>
 
-          <div class="form-field">
-            <label for="password">Password</label>
-            <input id="password" type="password" formControlName="password"
-              placeholder="••••••••"
-              [class.is-invalid]="isInvalid('password')" />
-            <div class="field-error" *ngIf="isInvalid('password')">At least 6 characters.</div>
-          </div>
+          @if (errorMessage) {
+            <div class="alert alert-error" role="alert">⚠ {{ errorMessage }}</div>
+          }
 
-          <button type="submit" class="btn btn-primary btn-lg submit-btn" [disabled]="isLoading">
-            <span *ngIf="isLoading" class="spinner"></span>
-            {{ isLoading ? 'Please wait…' : (isSignUp ? 'Create Account' : 'Sign In') }}
-          </button>
-        </form>
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+            @if (isSignUp) {
+              <div class="form-field">
+                <label for="fullName">Full Name</label>
+                <input id="fullName" type="text" formControlName="fullName"
+                  placeholder="Jane Smith" autocomplete="name" />
+              </div>
+            }
+
+            <div class="form-field">
+              <label for="email">Email</label>
+              <input id="email" type="email" formControlName="email"
+                placeholder="you@example.com" autocomplete="email"
+                [class.is-invalid]="isInvalid('email')" />
+              @if (isInvalid('email')) {
+                <div class="field-error">Enter a valid email address.</div>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="password">Password</label>
+              <input id="password" type="password" formControlName="password"
+                [placeholder]="isSignUp ? 'At least 6 characters' : '••••••••'"
+                [autocomplete]="isSignUp ? 'new-password' : 'current-password'"
+                [class.is-invalid]="isInvalid('password')" />
+              @if (isInvalid('password')) {
+                <div class="field-error">At least 6 characters required.</div>
+              }
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg submit-btn" [disabled]="isLoading">
+              @if (isLoading) { <span class="spinner"></span> }
+              {{ isLoading ? 'Please wait…' : (isSignUp ? 'Create Account' : 'Sign In') }}
+            </button>
+          </form>
+
+          <p class="auth-switch">
+            {{ isSignUp ? 'Already have an account?' : "Don't have an account?" }}
+            <button class="link-btn" (click)="setMode(!isSignUp)">{{ isSignUp ? 'Sign in' : 'Create one' }}</button>
+          </p>
+        </div>
       </div>
     </div>
   `,
   styles: [`
-    .auth-card { width: 100%; max-width: 420px; padding: 2.5rem 2rem; }
-
-    .brand { text-align: center; margin-bottom: 2rem; }
-    .brand-icon { font-size: 2.8rem; margin-bottom: .5rem; display: block; }
-    .brand-name { font-size: 1.9rem; font-weight: 700; color: var(--primary); margin: 0 0 .3rem; }
-    .brand-tagline { color: var(--text-muted); font-size: .9rem; margin: 0; }
-
-    .tab-bar {
-      display: flex; background: var(--bg); border-radius: var(--radius-sm);
-      padding: 3px; margin-bottom: 1.5rem; gap: 3px;
+    .auth-shell {
+      display: flex;
+      width: 100%;
+      max-width: 860px;
+      min-height: 520px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-xl);
     }
-    .tab {
-      flex: 1; padding: .55rem; border: none; background: transparent;
-      border-radius: 6px; font-size: .9rem; font-weight: 500;
-      font-family: inherit; color: var(--text-muted); cursor: pointer;
-      transition: all var(--transition);
 
-      &.tab-active {
-        background: var(--surface); color: var(--primary);
-        font-weight: 600; box-shadow: var(--shadow);
+    .auth-brand {
+      flex: 0 0 290px;
+      background: linear-gradient(160deg, #1e40af 0%, #2563eb 65%, #3b82f6 100%);
+      color: #fff;
+      padding: 2.75rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+
+    .brand-logo { font-size: 2.5rem; line-height: 1; }
+    .brand-name { font-size: 1.85rem; font-weight: 800; letter-spacing: -.03em; }
+    .brand-tagline { font-size: .9rem; opacity: .8; margin-bottom: 1.25rem; }
+
+    .brand-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: .7rem;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        font-size: .88rem;
+        opacity: .9;
+        font-weight: 500;
       }
     }
 
+    .auth-form-panel {
+      flex: 1;
+      padding: 2.5rem 2.25rem;
+      border-radius: 0;
+      border: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .auth-header {
+      margin-bottom: 1.4rem;
+      h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -.025em; }
+      p  { font-size: .875rem; color: var(--text-muted); margin-top: .2rem; }
+    }
+
+    .tab-bar {
+      display: flex;
+      background: #f1f5f9;
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      margin-bottom: 1.4rem;
+      gap: 3px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: .5rem;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-size: .875rem;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+
+      &.tab-active { background: var(--surface); color: var(--primary); font-weight: 600; box-shadow: var(--shadow-sm); }
+      &:not(.tab-active):hover { color: var(--text); }
+    }
+
     .submit-btn { width: 100%; margin-top: .5rem; }
+
+    .auth-switch {
+      text-align: center;
+      font-size: .85rem;
+      color: var(--text-muted);
+      margin-top: 1.2rem;
+    }
+
+    .link-btn {
+      background: none; border: none; color: var(--primary); font-weight: 600;
+      cursor: pointer; font-size: inherit; font-family: inherit; padding: 0;
+      text-decoration: underline; text-underline-offset: 2px;
+      &:hover { color: var(--primary-dark); }
+    }
+
+    @media (max-width: 640px) {
+      .auth-shell { flex-direction: column; max-width: 420px; }
+      .auth-brand { flex: none; padding: 1.5rem; .brand-features { display: none; } }
+      .auth-form-panel { padding: 1.75rem 1.5rem; }
+    }
   `],
 })
 export class LoginComponent {
   form: FormGroup;
-  isSignUp = false;
+  isSignUp  = false;
   isLoading = false;
   errorMessage = '';
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
   ) {
     this.form = this.fb.group({
       fullName: [''],
@@ -112,17 +221,14 @@ export class LoginComponent {
 
   onSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-
     this.isLoading = true;
     this.errorMessage = '';
     const { email, password, fullName } = this.form.value as { email: string; password: string; fullName: string };
-
     const action$ = this.isSignUp
       ? this.authService.register(email, password, fullName)
       : this.authService.login(email, password);
-
     action$.subscribe({
-      next: () => { this.isLoading = false; this.router.navigate(['/transfer']); },
+      next:  () => { this.isLoading = false; this.router.navigate(['/transfer']); },
       error: (err: Error) => { this.isLoading = false; this.errorMessage = err.message; },
     });
   }

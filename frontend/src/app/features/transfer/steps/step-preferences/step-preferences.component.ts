@@ -1,86 +1,77 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { Router } from '@angular/router';
 import { TransferFormService } from '../../transfer-form.service';
 
 @Component({
   selector: 'pw-step-preferences',
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(-6px)' }),
-        animate('180ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
-      ]),
-    ]),
-  ],
+  standalone: false,
   template: `
     <form [formGroup]="formService.form" novalidate>
       <h2 class="step-heading">Your Preferences</h2>
-      <p class="step-subheading">Tell us what you need and we'll take care of the rest.</p>
+      <p class="step-subheading">Tell us what you need and we'll handle the rest.</p>
 
       <!-- Service type -->
-      <div class="section-label">Service Type <span class="required">*</span></div>
+      <div class="section-label">Service Type <span class="req">*</span></div>
       <div class="service-grid">
-        <label
-          *ngFor="let opt of serviceOptions"
-          class="service-card"
-          [class.selected]="formService.form.get('serviceType')?.value === opt.value"
-        >
-          <input type="radio" [value]="opt.value" formControlName="serviceType" />
-          <span class="service-icon">{{ opt.icon }}</span>
-          <span class="service-label">{{ opt.value }}</span>
-        </label>
+        @for (opt of serviceOptions; track opt.value) {
+          <label class="service-card" [class.selected]="formService.form.get('serviceType')?.value === opt.value">
+            <input type="radio" [value]="opt.value" formControlName="serviceType" class="sr-only" />
+            <span class="service-icon">{{ opt.icon }}</span>
+            <span class="service-name">{{ opt.label }}</span>
+            <span class="service-desc">{{ opt.desc }}</span>
+          </label>
+        }
       </div>
 
-      <div class="field-error" *ngIf="showError" [@fadeIn]>
-        Please select a service type to continue.
-      </div>
+      @if (showError) {
+        <div class="field-error mt-sm">Please select a service type to continue.</div>
+      }
 
-      <!-- Additional services -->
-      <div class="section-label" style="margin-top:1.5rem">Add-ons <span class="optional">(optional)</span></div>
+      <!-- Add-ons -->
+      <div class="section-label" style="margin-top: 1.75rem">
+        Add-ons <span class="opt">(optional)</span>
+      </div>
       <div class="addon-grid" [formArrayName]="'additionalServices'">
-        <label
-          *ngFor="let ctrl of additionalServicesControls; let i = index"
-          class="addon-chip"
-          [class.selected]="ctrl.value"
-        >
-          <input type="checkbox" [formControl]="asControl(ctrl)" />
-          <span>{{ formService.additionalServiceOptions[i] }}</span>
-        </label>
+        @for (ctrl of additionalServicesControls; track $index; let i = $index) {
+          <label class="addon-chip" [class.selected]="ctrl.value">
+            <input type="checkbox" [formControl]="asControl(ctrl)" class="sr-only" />
+            <span class="addon-check">{{ ctrl.value ? '✓' : '' }}</span>
+            {{ formService.additionalServiceOptions[i] }}
+          </label>
+        }
       </div>
 
       <!-- Notes -->
-      <div class="form-field" style="margin-top:1.5rem">
-        <label for="notes">Prescription Notes <span class="optional">(optional)</span></label>
-        <textarea
-          id="notes"
-          formControlName="prescriptionNotes"
-          placeholder="e.g. Dosage changes, brand preference, allergies…"
-        ></textarea>
+      <div class="form-field" style="margin-top: 1.75rem">
+        <label for="notes">Prescription Notes <span class="opt">(optional)</span></label>
+        <textarea id="notes" formControlName="prescriptionNotes"
+          placeholder="e.g. Dosage changes, brand preference, allergies…"></textarea>
       </div>
 
       <div class="step-actions step-actions-end">
         <button type="button" class="btn btn-primary btn-lg" (click)="onNext()">
-          Next: Choose Pharmacy →
+          Next: Choose Pharmacy
+          <span>→</span>
         </button>
       </div>
     </form>
   `,
   styles: [`
     .section-label {
-      font-size: .8rem;
+      font-size: .75rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .07em;
       color: var(--text-muted);
       margin-bottom: .65rem;
     }
 
-    .required { color: var(--error); }
-    .optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: #94a3b8; }
+    .req  { color: var(--error); margin-left: 2px; }
+    .opt  { font-weight: 400; text-transform: none; letter-spacing: 0; color: #94a3b8; font-size: .8rem; }
+    .mt-sm { margin-top: .4rem; }
 
-    /* Service cards */
+    /* ── Service cards ── */
     .service-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -91,15 +82,14 @@ import { TransferFormService } from '../../transfer-form.service';
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: .5rem;
-      padding: 1.1rem .75rem;
+      gap: .35rem;
+      padding: 1.15rem .75rem;
       border: 2px solid var(--border);
       border-radius: 10px;
       cursor: pointer;
       transition: all var(--transition);
       background: var(--surface);
-
-      input[type="radio"] { display: none; }
+      text-align: center;
 
       &:hover { border-color: var(--primary-border); background: var(--primary-light); }
 
@@ -110,17 +100,18 @@ import { TransferFormService } from '../../transfer-form.service';
       }
     }
 
-    .service-icon { font-size: 1.6rem; line-height: 1; }
-    .service-label { font-size: .82rem; font-weight: 600; text-align: center; color: var(--text); line-height: 1.3; }
+    .service-icon { font-size: 1.65rem; line-height: 1; }
+    .service-name { font-size: .85rem; font-weight: 700; color: var(--text); }
+    .service-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.3; }
 
-    /* Add-on chips */
+    /* ── Add-on chips ── */
     .addon-grid { display: flex; gap: .5rem; flex-wrap: wrap; }
 
     .addon-chip {
       display: flex;
       align-items: center;
       gap: .4rem;
-      padding: .5rem 1rem;
+      padding: .5rem 1.05rem;
       border: 1.5px solid var(--border);
       border-radius: 999px;
       cursor: pointer;
@@ -128,8 +119,7 @@ import { TransferFormService } from '../../transfer-form.service';
       font-weight: 500;
       transition: all var(--transition);
       background: var(--surface);
-
-      input[type="checkbox"] { display: none; }
+      user-select: none;
 
       &:hover { border-color: var(--primary-border); background: var(--primary-light); }
 
@@ -140,13 +130,35 @@ import { TransferFormService } from '../../transfer-form.service';
         font-weight: 600;
       }
     }
+
+    .addon-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: .6rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity var(--transition);
+
+      .selected & { opacity: 1; }
+    }
+
+    @media (max-width: 480px) {
+      .service-grid { grid-template-columns: 1fr; }
+    }
   `],
 })
 export class StepPreferencesComponent implements OnInit {
   readonly serviceOptions = [
-    { value: 'Transfer Prescription', icon: '🔄' },
-    { value: 'New Prescription',      icon: '📝' },
-    { value: 'Refill',                icon: '💊' },
+    { value: 'Transfer Prescription', label: 'Transfer',    icon: '🔄', desc: 'Move from another pharmacy' },
+    { value: 'New Prescription',      label: 'New Rx',      icon: '📝', desc: 'From a new prescription' },
+    { value: 'Refill',                label: 'Refill',      icon: '💊', desc: 'Refill an existing Rx' },
   ];
 
   showError = false;

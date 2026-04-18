@@ -3,60 +3,65 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'pw-confirmation',
+  standalone: false,
   template: `
-    <div class="page-center confirm-bg">
+    <div class="page-center">
       <div class="confirm-card card">
 
-        <div class="check-wrap">
+        <!-- Animated checkmark -->
+        <div class="check-wrap" aria-hidden="true">
           <div class="check-ring"></div>
           <div class="check-circle">✓</div>
         </div>
 
-        <h1 class="confirm-title">All Done!</h1>
+        <h1 class="confirm-title">You're all set!</h1>
         <p class="confirm-body">
           Your prescription transfer request has been submitted.
           The pharmacy will contact you shortly to confirm the details.
         </p>
 
-        <div class="confirm-steps">
-          <div class="confirm-step">
-            <span class="step-dot done">✓</span>
-            <span>Request submitted</span>
+        <!-- Progress trail -->
+        <div class="progress-trail">
+          <div class="trail-step">
+            <div class="trail-dot done">✓</div>
+            <div class="trail-label">Submitted</div>
           </div>
-          <div class="confirm-step-line done"></div>
-          <div class="confirm-step">
-            <span class="step-dot pending">2</span>
-            <span>Pharmacy review</span>
+          <div class="trail-line done"></div>
+          <div class="trail-step">
+            <div class="trail-dot pending">2</div>
+            <div class="trail-label">Pharmacy Review</div>
           </div>
-          <div class="confirm-step-line"></div>
-          <div class="confirm-step">
-            <span class="step-dot pending">3</span>
-            <span>Pickup ready</span>
+          <div class="trail-line"></div>
+          <div class="trail-step">
+            <div class="trail-dot pending">3</div>
+            <div class="trail-label">Ready for Pickup</div>
           </div>
         </div>
 
-        <button class="btn btn-primary btn-lg new-btn" (click)="newBooking()">
-          Start Another Transfer
-        </button>
+        <div class="confirm-actions">
+          <button class="btn btn-primary btn-lg" (click)="newBooking()">
+            Start Another Transfer
+          </button>
+          <p class="confirm-note">A confirmation has been noted in your account.</p>
+        </div>
+
       </div>
     </div>
   `,
   styles: [`
-    .confirm-bg {
-      background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 60%, #f0fdf4 100%);
-    }
-
     .confirm-card {
       text-align: center;
       max-width: 460px;
       width: 100%;
       padding: 3rem 2.5rem;
+      animation: scaleIn .3s cubic-bezier(.34,1.56,.64,1);
     }
 
+    /* ── Animated check ── */
     .check-wrap {
       position: relative;
-      width: 88px;
-      height: 88px;
+      width: 84px;
+      height: 84px;
       margin: 0 auto 1.75rem;
     }
 
@@ -66,12 +71,7 @@ import { Router } from '@angular/router';
       border-radius: 50%;
       background: var(--success-light);
       border: 2px solid var(--success-border);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50%       { transform: scale(1.08); opacity: .7; }
+      animation: pulse 2.4s ease-in-out infinite;
     }
 
     .check-circle {
@@ -80,93 +80,107 @@ import { Router } from '@angular/router';
       border-radius: 50%;
       background: var(--success);
       color: #fff;
-      font-size: 1.7rem;
+      font-size: 1.65rem;
       font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 16px rgba(22,163,74,.3);
+      box-shadow: 0 4px 16px rgba(22,163,74,.35);
     }
 
+    /* ── Content ── */
     .confirm-title {
-      font-size: 1.8rem;
-      font-weight: 700;
+      font-size: 1.75rem;
+      font-weight: 800;
       color: var(--text);
-      margin: 0 0 .75rem;
-      letter-spacing: -.02em;
+      letter-spacing: -.03em;
+      margin-bottom: .65rem;
     }
 
     .confirm-body {
+      font-size: .9rem;
       color: var(--text-muted);
-      font-size: .95rem;
-      line-height: 1.65;
-      margin: 0 0 2rem;
+      line-height: 1.7;
+      margin-bottom: 1.75rem;
+      max-width: 340px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    /* Mini progress trail */
-    .confirm-steps {
+    /* ── Progress trail ── */
+    .progress-trail {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0;
       margin-bottom: 2rem;
-      padding: 1.1rem 1.5rem;
+      padding: 1.15rem 1.25rem;
       background: #f8fafc;
-      border-radius: var(--radius-sm);
+      border-radius: 10px;
       border: 1.5px solid var(--border);
     }
 
-    .confirm-step {
+    .trail-step {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: .35rem;
-      font-size: .75rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      white-space: nowrap;
+      gap: .4rem;
     }
 
-    .step-dot {
-      width: 28px;
-      height: 28px;
+    .trail-dot {
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: .78rem;
       font-weight: 700;
-      flex-shrink: 0;
 
-      &.done {
-        background: var(--success);
-        color: #fff;
-        border: 2px solid var(--success);
-      }
-
-      &.pending {
-        background: var(--surface);
-        color: var(--text-muted);
-        border: 2px solid var(--border);
-      }
+      &.done    { background: var(--success); color: #fff; border: 2px solid var(--success); }
+      &.pending { background: var(--surface); color: var(--text-muted); border: 2px solid var(--border); }
     }
 
-    .confirm-step-line {
+    .trail-label {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .trail-line {
       flex: 1;
       height: 2px;
       background: var(--border);
-      min-width: 32px;
+      min-width: 28px;
+      margin-bottom: 1.4rem;
+      margin: 0 .35rem;
       margin-bottom: 1.4rem;
       border-radius: 2px;
-
       &.done { background: var(--success); }
     }
 
-    .new-btn { width: 100%; }
+    /* ── Actions ── */
+    .confirm-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .confirm-actions .btn { width: 100%; }
+
+    .confirm-note {
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 480px) {
+      .confirm-card { padding: 2rem 1.5rem; }
+    }
   `],
 })
 export class ConfirmationComponent {
   constructor(private readonly router: Router) {}
-
   newBooking(): void { this.router.navigate(['/transfer']); }
 }
