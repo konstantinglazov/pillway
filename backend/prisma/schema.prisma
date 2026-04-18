@@ -2,34 +2,29 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// In Prisma 7 the connection URL is configured in prisma.config.ts (for the
-// CLI) and via the driver adapter passed to PrismaClient (for the runtime).
 datasource db {
   provider = "postgresql"
 }
 
-// ---------------------------------------------------------------------------
-// User
-// Owned entirely by Express — no Supabase Auth dependency.
-// Passwords are stored as bcrypt hashes (never plaintext).
-// ---------------------------------------------------------------------------
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+}
+
 model User {
   id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email        String    @unique
   passwordHash String    @map("password_hash")
   fullName     String?   @map("full_name")
   createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   bookings     Booking[]
 
   @@map("users")
 }
 
-// ---------------------------------------------------------------------------
-// Pharmacy
-// Sourced from the Google Places API. Deduplicated by placeId so the same
-// pharmacy is never stored twice even when selected by multiple users.
-// ---------------------------------------------------------------------------
 model Pharmacy {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name             String
@@ -38,28 +33,27 @@ model Pharmacy {
   lng              Float
   placeId          String   @unique @map("place_id")
   createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   bookings         Booking[]
 
   @@map("pharmacies")
 }
 
-// ---------------------------------------------------------------------------
-// Booking
-// Represents one prescription transfer / service request by a user.
-// ---------------------------------------------------------------------------
 model Booking {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String   @map("user_id") @db.Uuid
-  pharmacyId         String   @map("pharmacy_id") @db.Uuid
-  serviceType        String   @map("service_type")
-  additionalServices String[] @map("additional_services")
-  prescriptionNotes  String?  @map("prescription_notes")
-  status             String   @default("pending")
-  createdAt          DateTime @default(now()) @map("created_at")
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String        @map("user_id") @db.Uuid
+  pharmacyId         String        @map("pharmacy_id") @db.Uuid
+  serviceType        String        @map("service_type")
+  additionalServices String[]      @map("additional_services")
+  prescriptionNotes  String?       @map("prescription_notes")
+  status             BookingStatus @default(pending)
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
 
-  user     User     @relation(fields: [userId],     references: [id])
+  user     User     @relation(fields: [userId],     references: [id], onDelete: Cascade)
   pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id])
 
+  @@index([userId])
   @@map("bookings")
 }

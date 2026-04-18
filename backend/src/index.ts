@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { bookingsRouter } from './routes/bookings.routes';
 import { authRouter } from './routes/auth.routes';
@@ -8,10 +9,18 @@ import { prisma } from './config/prisma';
 
 dotenv.config();
 
+const REQUIRED_ENV = ['JWT_SECRET', 'DATABASE_URL'];
+const missing = REQUIRED_ENV.filter(k => !process.env[k]);
+if (missing.length) {
+  console.error(`Missing required env vars: ${missing.join(', ')}`);
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env['PORT'] ?? 3000;
 const FRONTEND_URL = process.env['FRONTEND_URL'] ?? 'http://localhost:4200';
 
+app.use(helmet());
 const corsOptions = { origin: FRONTEND_URL, methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] };
 app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));

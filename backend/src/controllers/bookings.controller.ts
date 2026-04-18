@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
+import { BookingStatus, Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma';
 
 const PharmacySchema = z.object({
   name:              z.string().min(1, 'Pharmacy name is required'),
   formatted_address: z.string().min(1, 'Formatted address is required'),
-  lat:               z.number({ required_error: 'Latitude is required' }),
-  lng:               z.number({ required_error: 'Longitude is required' }),
+  lat:               z.number({ required_error: 'Latitude is required' }).min(-90).max(90),
+  lng:               z.number({ required_error: 'Longitude is required' }).min(-180).max(180),
   place_id:          z.string().min(1, 'Google place_id is required'),
 });
 
@@ -37,7 +37,12 @@ export async function createBooking(
 
     const pharmacy = await prisma.pharmacy.upsert({
       where:  { placeId: body.pharmacy.place_id },
-      update: {},
+      update: {
+        name:             body.pharmacy.name,
+        formattedAddress: body.pharmacy.formatted_address,
+        lat:              body.pharmacy.lat,
+        lng:              body.pharmacy.lng,
+      },
       create: {
         name:             body.pharmacy.name,
         formattedAddress: body.pharmacy.formatted_address,
@@ -55,7 +60,7 @@ export async function createBooking(
         serviceType:         body.service_type,
         additionalServices:  body.additional_services,
         prescriptionNotes:   body.prescription_notes ?? null,
-        status:              'pending',
+        status:              BookingStatus.pending,
       },
       select: { id: true },
     });
