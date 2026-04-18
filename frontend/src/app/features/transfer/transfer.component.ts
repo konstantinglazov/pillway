@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 interface Step { label: string; path: string; icon: string; }
 
@@ -11,6 +12,7 @@ interface Step { label: string; path: string; icon: string; }
       <!-- Top bar -->
       <header class="topbar">
         <span class="topbar-brand">💊 Pillway</span>
+        <button class="btn btn-secondary logout-btn" (click)="logout()">Sign Out</button>
       </header>
 
       <div class="container">
@@ -45,11 +47,14 @@ interface Step { label: string; path: string; icon: string; }
     .topbar {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 1rem 1.5rem;
+      padding: .85rem 1.5rem;
       position: sticky;
       top: 0;
       z-index: 10;
       box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .topbar-brand {
@@ -57,6 +62,12 @@ interface Step { label: string; path: string; icon: string; }
       font-weight: 700;
       color: var(--primary);
       letter-spacing: -.01em;
+    }
+
+    .logout-btn {
+      font-size: .82rem;
+      padding: .4rem .95rem;
+      border-radius: var(--radius-sm);
     }
 
     .page-title {
@@ -142,7 +153,15 @@ export class TransferComponent {
     { label: 'Review',      path: 'review',      icon: '✅' },
   ];
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly authService: AuthService
+  ) {}
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 
   isActive(path: string): boolean {
     return this.router.url.includes(`/transfer/${path}`);

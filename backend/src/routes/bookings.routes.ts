@@ -1,16 +1,8 @@
 import { Router } from 'express';
-import { createBooking, getBookingsByUser } from '../controllers/bookings.controller';
+import { createBooking, getBookings } from '../controllers/bookings.controller';
+import { authenticate } from '../middleware/authenticate';
 
-/**
- * Bookings router.
- *
- * Mounted at /api/bookings in src/index.ts.
- *
- * Routes:
- *   POST /api/bookings           — create a prescription transfer booking
- *   GET  /api/bookings/:userId   — fetch all bookings for a user
- */
 export const bookingsRouter: Router = Router();
 
-bookingsRouter.post('/', createBooking);
-bookingsRouter.get('/:userId', getBookingsByUser);
+bookingsRouter.post('/',  authenticate, createBooking);
+bookingsRouter.get('/',   authenticate, getBookings);

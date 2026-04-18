@@ -1,37 +1,28 @@
-// Pillway — Prisma Schema
-// Database: Supabase (PostgreSQL). Connect via the connection string from
-// Supabase dashboard → Settings → Database → Connection string (URI mode).
-//
-// After any schema change run:
-//   npx prisma generate          — regenerates the PrismaClient types
-//   npx prisma db push           — syncs the schema to the DB (dev)
-//   npx prisma migrate dev       — creates a tracked migration (recommended)
-
 generator client {
   provider = "prisma-client-js"
 }
 
 // In Prisma 7 the connection URL is configured in prisma.config.ts (for the
 // CLI) and via the driver adapter passed to PrismaClient (for the runtime).
-// The datasource block only declares the provider now.
 datasource db {
   provider = "postgresql"
 }
 
 // ---------------------------------------------------------------------------
-// Profile
-// Mirrors auth.users so application queries stay in the public schema.
-// Populated automatically by the Supabase trigger in 001_initial_schema.sql.
+// User
+// Owned entirely by Express — no Supabase Auth dependency.
+// Passwords are stored as bcrypt hashes (never plaintext).
 // ---------------------------------------------------------------------------
-model Profile {
-  id        String    @id @db.Uuid
-  fullName  String?   @map("full_name")
-  email     String?
-  createdAt DateTime  @default(now()) @map("created_at")
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  fullName     String?   @map("full_name")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
-  bookings  Booking[]
+  bookings     Booking[]
 
-  @@map("profiles")
+  @@map("users")
 }
 
 // ---------------------------------------------------------------------------
@@ -67,7 +58,7 @@ model Booking {
   status             String   @default("pending")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  user     Profile  @relation(fields: [userId], references: [id])
+  user     User     @relation(fields: [userId],     references: [id])
   pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   @@map("bookings")

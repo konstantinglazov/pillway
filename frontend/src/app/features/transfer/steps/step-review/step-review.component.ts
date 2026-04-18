@@ -207,10 +207,10 @@ export class StepReviewComponent implements OnInit, OnDestroy {
 
     this.bookingService
       .createBooking({
-        pharmacy: formValue.pharmacy,
-        service_type: formValue.serviceType,
-        additional_services: this.formService.getSelectedServices(),
-        prescription_notes: formValue.prescriptionNotes || undefined,
+        pharmacy:             formValue.pharmacy,
+        service_type:         formValue.serviceType,
+        additional_services:  this.formService.getSelectedServices(),
+        prescription_notes:   formValue.prescriptionNotes || undefined,
       })
       .subscribe({
         next: () => {

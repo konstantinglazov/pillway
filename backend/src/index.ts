@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { bookingsRouter } from './routes/bookings.routes';
+import { authRouter } from './routes/auth.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { prisma } from './config/prisma';
 
@@ -18,21 +19,22 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use('/auth',         authRouter);
 app.use('/api/bookings', bookingsRouter);
 app.use(errorHandler);
 
-const server = app.listen(PORT, () => {
-  console.log(`Pillway API listening on http://localhost:${PORT}`);
-});
+if (process.env['NODE_ENV'] !== 'test') {
+  const server = app.listen(PORT, () => {
+    console.log(`Pillway API listening on http://localhost:${PORT}`);
+  });
 
-// Gracefully disconnect Prisma when the process exits so the connection pool
-// is released cleanly (important for serverless / short-lived deployments).
-async function shutdown(): Promise<void> {
-  await prisma.$disconnect();
-  server.close(() => process.exit(0));
+  async function shutdown(): Promise<void> {
+    await prisma.$disconnect();
+    server.close(() => process.exit(0));
+  }
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
 
 export default app;
