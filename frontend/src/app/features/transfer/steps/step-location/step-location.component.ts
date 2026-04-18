@@ -205,18 +205,29 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {}
 
   private async initMap(): Promise<void> {
-    // gm_authFailure is Google's global hook for key/billing errors. It fires
-    // instead of rejecting the importLibrary promise, so we must race against it.
-    const authFailure = new Promise<never>((_, reject) => {
-      (window as typeof window & { gm_authFailure?(): void }).gm_authFailure = () =>
-        reject(new Error('API key invalid or missing required Google Cloud permissions.'));
+    console.log('[Maps] init — key present:', !!environment.googleMapsApiKey, 'key prefix:', environment.googleMapsApiKey.slice(0, 8));
+
+    // gm_authFailure fires instead of rejecting the importLibrary promise on key/billing errors.
+    // The timeout catches every other failure mode (network down, CSP, etc).
+    const bail = new Promise<never>((_, reject) => {
+      (window as typeof window & { gm_authFailure?(): void }).gm_authFailure = () => {
+        console.error('[Maps] gm_authFailure — key rejected by Google');
+        reject(new Error('API key rejected — check key restrictions & enabled APIs in Cloud Console'));
+      };
+      setTimeout(() => {
+        console.error('[Maps] load timeout — script never resolved');
+        reject(new Error('Google Maps timed out. Check network tab for a failed maps.googleapis.com request.'));
+      }, 10_000);
     });
 
     try {
+      console.log('[Maps] calling importLibrary("maps")…');
       const loader = new Loader({ apiKey: environment.googleMapsApiKey, version: 'weekly' });
-      const mapsLib = await Promise.race([loader.importLibrary('maps'), authFailure]);
+      const mapsLib = await Promise.race([loader.importLibrary('maps'), bail]);
+      console.log('[Maps] maps library loaded, loading places…');
       const { Map } = mapsLib as google.maps.MapsLibrary;
       await loader.importLibrary('places');
+      console.log('[Maps] places library loaded');
 
       this.ngZone.run(() => { this.mapLoading = false; });
 
