@@ -11,7 +11,9 @@ import { Router } from '@angular/router';
         <!-- Animated checkmark -->
         <div class="check-wrap" aria-hidden="true">
           <div class="check-ring"></div>
-          <div class="check-circle">✓</div>
+          <div class="check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+          </div>
         </div>
 
         <h1 class="confirm-title">You're all set!</h1>
@@ -23,7 +25,9 @@ import { Router } from '@angular/router';
         <!-- Progress trail -->
         <div class="progress-trail">
           <div class="trail-step">
-            <div class="trail-dot done">✓</div>
+            <div class="trail-dot done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+            </div>
             <div class="trail-label">Submitted</div>
           </div>
           <div class="trail-line done"></div>
@@ -80,12 +84,11 @@ import { Router } from '@angular/router';
       border-radius: 50%;
       background: var(--success);
       color: #fff;
-      font-size: 1.65rem;
-      font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 16px rgba(22,163,74,.35);
+      svg { width: 52%; height: 52%; }
     }
 
     /* ── Content ── */
@@ -137,7 +140,7 @@ import { Router } from '@angular/router';
       font-size: .78rem;
       font-weight: 700;
 
-      &.done    { background: var(--success); color: #fff; border: 2px solid var(--success); }
+      &.done    { background: var(--success); color: #fff; border: 2px solid var(--success); svg { width: 55%; height: 55%; } }
       &.pending { background: var(--surface); color: var(--text-muted); border: 2px solid var(--border); }
     }
 

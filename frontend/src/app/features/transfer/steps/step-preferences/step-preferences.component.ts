@@ -17,7 +17,17 @@ import { TransferFormService } from '../../transfer-form.service';
         @for (opt of serviceOptions; track opt.value) {
           <label class="service-card" [class.selected]="formService.form.get('serviceType')?.value === opt.value">
             <input type="radio" [value]="opt.value" formControlName="serviceType" class="sr-only" />
-            <span class="service-icon">{{ opt.icon }}</span>
+            @switch (opt.iconType) {
+              @case ('transfer') {
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+              }
+              @case ('new-rx') {
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+              }
+              @case ('pill') {
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="M8.5 8.5 16 16"/></svg>
+              }
+            }
             <span class="service-name">{{ opt.label }}</span>
             <span class="service-desc">{{ opt.desc }}</span>
           </label>
@@ -36,7 +46,11 @@ import { TransferFormService } from '../../transfer-form.service';
         @for (ctrl of additionalServicesControls; track $index; let i = $index) {
           <label class="addon-chip" [class.selected]="ctrl.value">
             <input type="checkbox" [formControl]="asControl(ctrl)" class="sr-only" />
-            <span class="addon-check">{{ ctrl.value ? '✓' : '' }}</span>
+            <span class="addon-check" aria-hidden="true">
+              @if (ctrl.value) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+              }
+            </span>
             {{ formService.additionalServiceOptions[i] }}
           </label>
         }
@@ -52,7 +66,7 @@ import { TransferFormService } from '../../transfer-form.service';
       <div class="step-actions step-actions-end">
         <button type="button" class="btn btn-primary btn-lg" (click)="onNext()">
           Next: Choose Pharmacy
-          <span>→</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
         </button>
       </div>
     </form>
@@ -100,7 +114,13 @@ import { TransferFormService } from '../../transfer-form.service';
       }
     }
 
-    .service-icon { font-size: 1.65rem; line-height: 1; }
+    .service-icon {
+      width: 1.75rem;
+      height: 1.75rem;
+      color: var(--primary);
+      transition: color var(--transition);
+      .service-card:not(.selected) & { color: var(--text-muted); }
+    }
     .service-name { font-size: .85rem; font-weight: 700; color: var(--text); }
     .service-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.3; }
 
@@ -140,11 +160,10 @@ import { TransferFormService } from '../../transfer-form.service';
       border-radius: 50%;
       background: var(--primary);
       color: #fff;
-      font-size: .6rem;
-      font-weight: 700;
       flex-shrink: 0;
       opacity: 0;
       transition: opacity var(--transition);
+      svg { width: 10px; height: 10px; }
 
       .selected & { opacity: 1; }
     }
@@ -156,9 +175,9 @@ import { TransferFormService } from '../../transfer-form.service';
 })
 export class StepPreferencesComponent implements OnInit {
   readonly serviceOptions = [
-    { value: 'Transfer Prescription', label: 'Transfer',    icon: '🔄', desc: 'Move from another pharmacy' },
-    { value: 'New Prescription',      label: 'New Rx',      icon: '📝', desc: 'From a new prescription' },
-    { value: 'Refill',                label: 'Refill',      icon: '💊', desc: 'Refill an existing Rx' },
+    { value: 'Transfer Prescription', label: 'Transfer', iconType: 'transfer', desc: 'Move from another pharmacy' },
+    { value: 'New Prescription',      label: 'New Rx',   iconType: 'new-rx',   desc: 'From a new prescription' },
+    { value: 'Refill',                label: 'Refill',   iconType: 'pill',     desc: 'Refill an existing Rx' },
   ];
 
   showError = false;

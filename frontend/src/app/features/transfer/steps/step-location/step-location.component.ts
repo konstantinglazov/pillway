@@ -13,7 +13,7 @@ import { TransferFormService } from '../../transfer-form.service';
 
     <!-- Search bar -->
     <div class="search-wrap">
-      <span class="search-icon" aria-hidden="true">🔍</span>
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input #searchInput type="text" class="search-input"
         placeholder="Search pharmacy name or address…"
         autocomplete="off" aria-label="Search for a pharmacy" />
@@ -23,14 +23,14 @@ import { TransferFormService } from '../../transfer-form.service';
     <div class="map-wrap">
       @if (mapLoading) {
         <div class="map-skeleton">
-          <div class="map-skeleton-icon">🗺</div>
+          <svg class="map-skeleton-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c-.317-.159-.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0Z"/></svg>
           <p>Loading map…</p>
         </div>
       }
       @if (mapError) {
         <div class="map-error">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Map failed — check API key restrictions &amp; enabled APIs in Cloud Console. See browser console for details.
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Map failed — check API key restrictions &amp; enabled APIs in Cloud Console.
         </div>
       }
       <div #mapContainer class="map-container" [class.map-hidden]="mapLoading || mapError"
@@ -40,7 +40,7 @@ import { TransferFormService } from '../../transfer-form.service';
     <!-- Selected pharmacy -->
     @if (selectedPharmacy) {
       <div class="pharmacy-card">
-        <div class="pharmacy-icon">📍</div>
+        <svg class="pharmacy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
         <div class="pharmacy-info">
           <strong>{{ selectedPharmacy.name }}</strong>
           <span>{{ selectedPharmacy.formatted_address }}</span>
@@ -49,15 +49,19 @@ import { TransferFormService } from '../../transfer-form.service';
       </div>
     } @else {
       <div class="map-hint">
-        <span>☝</span> Use the search box to find and select a pharmacy
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Use the search box to find and select a pharmacy
       </div>
     }
 
     <div class="step-actions">
-      <button type="button" class="btn btn-secondary" (click)="onBack()">← Back</button>
-      <button type="button" class="btn btn-primary btn-lg"
-        [disabled]="!formService.getStepValid(2)" (click)="onNext()">
-        Next: Review Order →
+      <button type="button" class="btn btn-secondary" (click)="onBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Back
+      </button>
+      <button type="button" class="btn btn-primary btn-lg" [disabled]="!formService.getStepValid(2)" (click)="onNext()">
+        Next: Review Order
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
       </button>
     </div>
   `,
@@ -69,11 +73,14 @@ import { TransferFormService } from '../../transfer-form.service';
 
     .search-icon {
       position: absolute;
-      left: .9rem;
+      left: .85rem;
       top: 50%;
       transform: translateY(-50%);
-      font-size: .95rem;
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
       pointer-events: none;
+      flex-shrink: 0;
     }
 
     .search-input {
@@ -124,7 +131,7 @@ import { TransferFormService } from '../../transfer-form.service';
       background: var(--surface-raised);
     }
 
-    .map-skeleton-icon { font-size: 2rem; animation: pulse 2s ease-in-out infinite; }
+    .map-skeleton-icon { width: 2rem; height: 2rem; animation: pulse 2s ease-in-out infinite; }
     .map-error { color: var(--error); background: var(--error-light); flex-direction: row; gap: .4rem; font-weight: 500; }
 
     /* ── Selected pharmacy ── */
@@ -140,7 +147,7 @@ import { TransferFormService } from '../../transfer-form.service';
       animation: scaleIn .2s ease;
     }
 
-    .pharmacy-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .pharmacy-icon { width: 1.3rem; height: 1.3rem; flex-shrink: 0; color: var(--success); }
 
     .pharmacy-info {
       flex: 1;
@@ -230,6 +237,9 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('[Maps] places library loaded');
 
       this.ngZone.run(() => { this.mapLoading = false; });
+      // One tick lets Angular remove .map-hidden from the DOM so Google Maps
+      // measures the correct container size and renders tiles on first load.
+      await new Promise<void>(resolve => setTimeout(resolve, 0));
 
       this.map = new Map(this.mapContainerRef.nativeElement, {
         center: { lat: 43.6532, lng: -79.3832 },
