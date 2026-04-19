@@ -236,24 +236,28 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.ngZone.run(() => { this.mapLoading = false; });
 
-      this.map = new Map(this.mapContainerRef.nativeElement, {
-        center: { lat: 43.6532, lng: -79.3832 },
-        zoom: 12,
-        mapId: 'DEMO_MAP_ID', // required for AdvancedMarkerElement; replace with a real Map ID in production
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-      });
+      // All Google Maps objects must be created OUTSIDE Angular's zone.
+      // Zone.js patches requestAnimationFrame/setTimeout — running Maps code
+      // inside the zone traps every animation frame and triggers Angular change
+      // detection continuously, which corrupts Maps' rendering pipeline and
+      // causes markers to not paint until an unrelated repaint (e.g. theme switch).
+      this.ngZone.runOutsideAngular(() => {
+        this.map = new Map(this.mapContainerRef.nativeElement, {
+          center: { lat: 43.6532, lng: -79.3832 },
+          zoom: 12,
+          mapId: 'DEMO_MAP_ID', // replace with a real Cloud Console Map ID for production
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
 
+        this.autocomplete = new google.maps.places.Autocomplete(this.searchInputRef.nativeElement, {
+          types: ['pharmacy'],
+          componentRestrictions: { country: 'ca' },
+          fields: ['name', 'formatted_address', 'geometry', 'place_id'],
+        });
 
-      this.autocomplete = new google.maps.places.Autocomplete(this.searchInputRef.nativeElement, {
-        types: ['pharmacy'],
-        componentRestrictions: { country: 'ca' },
-        fields: ['name', 'formatted_address', 'geometry', 'place_id'],
-      });
-
-      this.autocomplete.addListener('place_changed', () => {
-        this.ngZone.run(() => this.onPlaceChanged());
+        this.autocomplete.addListener('place_changed', () => this.onPlaceChanged());
       });
     } catch (err) {
       console.error('[Maps]', err);
@@ -265,14 +269,14 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
     const place = this.autocomplete?.getPlace();
     if (!place?.geometry?.location || !place.place_id) return;
 
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
+    const lat  = place.geometry.location.lat();
+    const lng  = place.geometry.location.lng();
     const name = place.name ?? '';
     const formatted_address = place.formatted_address ?? '';
+    const place_id = place.place_id;
 
-    this.formService.pharmacyGroup.patchValue({ name, formatted_address, lat, lng, place_id: place.place_id });
-    this.selectedPharmacy = { name, formatted_address };
-
+    // Marker and map operations stay outside Angular's zone — zone.js must not
+    // intercept the rAF calls Maps uses to paint the marker overlay.
     const position = { lat, lng };
     if (this.marker) {
       this.marker.position = position;
@@ -281,6 +285,12 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.map?.panTo(position);
     this.map?.setZoom(15);
+
+    // Re-enter Angular zone only for state that Angular templates depend on.
+    this.ngZone.run(() => {
+      this.formService.pharmacyGroup.patchValue({ name, formatted_address, lat, lng, place_id });
+      this.selectedPharmacy = { name, formatted_address };
+    });
   }
 
   onBack(): void { this.router.navigate(['/transfer/preferences']); }
