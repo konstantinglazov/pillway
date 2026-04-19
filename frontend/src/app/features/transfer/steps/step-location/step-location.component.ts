@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, NgZone, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { Loader } from '@googlemaps/js-api-loader';
 import { environment } from '../../../../../environments/environment';
@@ -196,6 +196,7 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
     readonly formService: TransferFormService,
     private readonly router: Router,
     private readonly ngZone: NgZone,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -290,6 +291,7 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ngZone.run(() => {
       this.formService.pharmacyGroup.patchValue({ name, formatted_address, lat, lng, place_id });
       this.selectedPharmacy = { name, formatted_address };
+      this.cdr.detectChanges();
     });
   }
 
