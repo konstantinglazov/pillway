@@ -49,7 +49,7 @@ import { TransferFormService } from '../../transfer-form.service';
       </div>
     } @else {
       <div class="map-hint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
         Use the search box to find and select a pharmacy
       </div>
     }
@@ -181,6 +181,7 @@ import { TransferFormService } from '../../transfer-form.service';
       border-radius: var(--radius-sm);
       border: 1px dashed var(--border);
       margin-bottom: .5rem;
+      svg { flex-shrink: 0; }
     }
   `],
 })
@@ -237,9 +238,6 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('[Maps] places library loaded');
 
       this.ngZone.run(() => { this.mapLoading = false; });
-      // One tick lets Angular remove .map-hidden from the DOM so Google Maps
-      // measures the correct container size and renders tiles on first load.
-      await new Promise<void>(resolve => setTimeout(resolve, 0));
 
       this.map = new Map(this.mapContainerRef.nativeElement, {
         center: { lat: 43.6532, lng: -79.3832 },
@@ -249,6 +247,12 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
         fullscreenControl: false,
         styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }],
       });
+
+      // Google Maps skips tile rendering while the container has visibility:hidden.
+      // Wait one tick for Angular to flush the DOM update (remove .map-hidden),
+      // then trigger resize so Maps re-renders tiles in the now-visible container.
+      await new Promise<void>(resolve => setTimeout(resolve, 0));
+      google.maps.event.trigger(this.map, 'resize');
 
       this.autocomplete = new google.maps.places.Autocomplete(this.searchInputRef.nativeElement, {
         types: ['pharmacy'],
