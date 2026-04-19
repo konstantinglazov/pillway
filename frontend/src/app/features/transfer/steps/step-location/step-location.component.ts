@@ -33,8 +33,7 @@ import { TransferFormService } from '../../transfer-form.service';
           Map failed — check API key restrictions &amp; enabled APIs in Cloud Console.
         </div>
       }
-      <div #mapContainer class="map-container" [class.map-hidden]="mapLoading || mapError"
-        aria-label="Pharmacy map"></div>
+      <div #mapContainer class="map-container" aria-label="Pharmacy map"></div>
     </div>
 
     <!-- Selected pharmacy -->
@@ -112,11 +111,7 @@ import { TransferFormService } from '../../transfer-form.service';
       background: var(--bg-sunken);
     }
 
-    .map-container {
-      width: 100%;
-      height: 100%;
-      &.map-hidden { visibility: hidden; }
-    }
+    .map-container { width: 100%; height: 100%; }
 
     .map-skeleton, .map-error {
       position: absolute;
@@ -248,11 +243,6 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
         styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }],
       });
 
-      // Google Maps skips tile rendering while the container has visibility:hidden.
-      // Wait one tick for Angular to flush the DOM update (remove .map-hidden),
-      // then trigger resize so Maps re-renders tiles in the now-visible container.
-      await new Promise<void>(resolve => setTimeout(resolve, 0));
-      google.maps.event.trigger(this.map, 'resize');
 
       this.autocomplete = new google.maps.places.Autocomplete(this.searchInputRef.nativeElement, {
         types: ['pharmacy'],
