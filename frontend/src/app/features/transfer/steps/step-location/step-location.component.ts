@@ -190,8 +190,7 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private map?: google.maps.Map;
   private autocomplete?: google.maps.places.Autocomplete;
-  // eslint-disable-next-line deprecation/deprecation
-  private marker?: google.maps.Marker;
+  private marker?: google.maps.marker.AdvancedMarkerElement;
 
   constructor(
     readonly formService: TransferFormService,
@@ -240,10 +239,10 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
       this.map = new Map(this.mapContainerRef.nativeElement, {
         center: { lat: 43.6532, lng: -79.3832 },
         zoom: 12,
+        mapId: 'DEMO_MAP_ID', // required for AdvancedMarkerElement; replace with a real Map ID in production
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
-        styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }],
       });
 
 
@@ -276,10 +275,9 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const position = { lat, lng };
     if (this.marker) {
-      this.marker.setPosition(position);
+      this.marker.position = position;
     } else {
-      // eslint-disable-next-line deprecation/deprecation
-      this.marker = new google.maps.Marker({ map: this.map, position, animation: google.maps.Animation.DROP });
+      this.marker = new google.maps.marker.AdvancedMarkerElement({ map: this.map, position });
     }
     this.map?.panTo(position);
     this.map?.setZoom(15);
