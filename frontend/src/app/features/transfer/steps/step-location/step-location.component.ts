@@ -227,10 +227,13 @@ export class StepLocationComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('[Maps] calling importLibrary("maps")…');
       const loader = new Loader({ apiKey: environment.googleMapsApiKey, version: 'weekly' });
       const mapsLib = await Promise.race([loader.importLibrary('maps'), bail]);
-      console.log('[Maps] maps library loaded, loading places…');
+      console.log('[Maps] maps library loaded, loading places + marker…');
       const { Map } = mapsLib as google.maps.MapsLibrary;
-      await loader.importLibrary('places');
-      console.log('[Maps] places library loaded');
+      await Promise.all([
+        loader.importLibrary('places'),
+        loader.importLibrary('marker'),   // loads legacy Marker + AdvancedMarkerElement
+      ]);
+      console.log('[Maps] places + marker libraries loaded');
 
       this.ngZone.run(() => { this.mapLoading = false; });
 
