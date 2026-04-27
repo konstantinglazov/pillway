@@ -34,11 +34,12 @@ const root        = path.resolve(__dirname, '..');
 const isProd      = process.env['NODE_ENV'] === 'production';
 const envFilePath = path.join(root, isProd ? '.env.production' : '.env');
 
-// Merge: .env file takes precedence over process.env (allows Vercel env vars to work)
+// process.env (Vercel / CI env vars) takes precedence over the local .env file.
+// This lets Vercel dashboard variables override anything in the committed file.
 const fileEnv = parseEnvFile(envFilePath);
 const env = {
-  API_URL:             fileEnv['API_URL']             ?? process.env['API_URL']             ?? '',
-  GOOGLE_MAPS_API_KEY: fileEnv['GOOGLE_MAPS_API_KEY'] ?? process.env['GOOGLE_MAPS_API_KEY'] ?? '',
+  API_URL:             process.env['API_URL']             ?? fileEnv['API_URL']             ?? '',
+  GOOGLE_MAPS_API_KEY: process.env['GOOGLE_MAPS_API_KEY'] ?? fileEnv['GOOGLE_MAPS_API_KEY'] ?? '',
 };
 
 const outFile = path.join(root, 'src/environments', isProd ? 'environment.prod.ts' : 'environment.ts');
