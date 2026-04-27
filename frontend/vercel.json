@@ -1,6 +1,6 @@
 {
   "framework": null,
-  "buildCommand": "npm run build:prod",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist/pillway",
   "installCommand": "npm install --include=dev",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]

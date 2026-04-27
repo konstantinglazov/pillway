@@ -6,6 +6,7 @@
     "start": "node scripts/generate-env.js && ng serve",
     "build": "node scripts/generate-env.js && ng build",
     "build:prod": "node scripts/generate-env.js && ng build --configuration production",
+    "vercel-build": "node scripts/generate-env.js && ng build --configuration production",
     "test": "ng test",
     "lint": "ng lint"
   },
