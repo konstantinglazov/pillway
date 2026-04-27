@@ -28,20 +28,27 @@ export const environment = {
 };
 `;
   fs.writeFileSync(outFile, content, 'utf8');
-  console.log(`✅  ${path.basename(outFile)} written`);
+  console.log(`✅  ${path.basename(outFile)} written (apiUrl=${apiUrl})`);
 }
 
-const root        = path.resolve(__dirname, '..');
-const isProd      = process.env['NODE_ENV'] === 'production';
+const root   = path.resolve(__dirname, '..');
+const isProd = process.env['NODE_ENV'] === 'production' || process.argv.includes('--production');
+
+// When running in production mode (Vercel build or explicit --production flag),
+// read from .env.production; otherwise read from .env for local dev.
 const envFilePath = path.join(root, isProd ? '.env.production' : '.env');
 
 // process.env (Vercel / CI env vars) takes precedence over the local .env file.
-// This lets Vercel dashboard variables override anything in the committed file.
 const fileEnv = parseEnvFile(envFilePath);
 const env = {
   API_URL:             process.env['API_URL']             ?? fileEnv['API_URL']             ?? '',
   GOOGLE_MAPS_API_KEY: process.env['GOOGLE_MAPS_API_KEY'] ?? fileEnv['GOOGLE_MAPS_API_KEY'] ?? '',
 };
 
-const outFile = path.join(root, 'src/environments', isProd ? 'environment.prod.ts' : 'environment.ts');
-write(env, outFile, isProd);
+if (isProd) {
+  // Production: write only the prod file; Angular fileReplacements will use it.
+  write(env, path.join(root, 'src/environments/environment.prod.ts'), true);
+} else {
+  // Dev: write only the dev file.
+  write(env, path.join(root, 'src/environments/environment.ts'), false);
+}
