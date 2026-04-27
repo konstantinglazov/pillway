@@ -9,6 +9,13 @@ interface AuthResponse {
   user: { id: string; email: string; fullName: string | null };
 }
 
+interface TokenPayload {
+  sub: string;
+  email: string;
+  fullName?: string | null;
+  exp?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = environment.apiUrl;
@@ -37,10 +44,42 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const payload = this.decodeToken();
+    if (!payload) return false;
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      this.logout();
+      return false;
+    }
+    return true;
+  }
+
+  getUserInfo(): { email: string; fullName: string | null } | null {
+    const payload = this.decodeToken();
+    if (!payload) return null;
+    return { email: payload.email ?? '', fullName: payload.fullName ?? null };
+  }
+
+  getUserInitials(): string {
+    const info = this.getUserInfo();
+    if (!info) return 'Me';
+    if (info.fullName) {
+      return info.fullName.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+    }
+    return info.email.slice(0, 2).toUpperCase();
   }
 
   private storeToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
+  }
+
+  private decodeToken(): TokenPayload | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(b64)) as TokenPayload;
+    } catch {
+      return null;
+    }
   }
 }

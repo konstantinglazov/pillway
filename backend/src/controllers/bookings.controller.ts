@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { BookingStatus, Prisma } from '@prisma/client';
+import { BookingStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 
 const PharmacySchema = z.object({
@@ -11,19 +11,15 @@ const PharmacySchema = z.object({
   place_id:          z.string().min(1, 'Google place_id is required'),
 });
 
-// user_id is no longer in the body — it comes from the JWT via req.userId.
+// user_id is not accepted in the body — it comes from the JWT via req.userId.
 const CreateBookingSchema = z.object({
-  pharmacy:             PharmacySchema,
-  service_type:         z.string().min(1, 'service_type is required'),
-  additional_services:  z.array(z.string()).optional().default([]),
-  prescription_notes:   z.string().optional(),
+  pharmacy:            PharmacySchema,
+  service_type:        z.string().min(1, 'service_type is required'),
+  additional_services: z.array(z.string()).optional().default([]),
+  prescription_notes:  z.string().optional(),
 });
 
 type CreateBookingBody = z.infer<typeof CreateBookingSchema>;
-
-type BookingWithPharmacy = Prisma.BookingGetPayload<{
-  include: { pharmacy: { select: { name: true; formattedAddress: true } } };
-}>;
 
 /** POST /api/bookings — requires authenticate middleware */
 export async function createBooking(
@@ -35,6 +31,7 @@ export async function createBooking(
     const body: CreateBookingBody = CreateBookingSchema.parse(req.body);
     const userId = req.userId!;
 
+    // Upsert pharmacy by place_id so the same location is never duplicated.
     const pharmacy = await prisma.pharmacy.upsert({
       where:  { placeId: body.pharmacy.place_id },
       update: {
@@ -53,14 +50,18 @@ export async function createBooking(
       select: { id: true },
     });
 
+    // Medications are stored in the booking_medications child table so the
+    // schema uses proper MySQL foreign keys instead of a PG array column.
     const booking = await prisma.booking.create({
       data: {
         userId,
-        pharmacyId:          pharmacy.id,
-        serviceType:         body.service_type,
-        additionalServices:  body.additional_services,
-        prescriptionNotes:   body.prescription_notes ?? null,
-        status:              BookingStatus.pending,
+        pharmacyId:       pharmacy.id,
+        serviceType:      body.service_type,
+        prescriptionNotes: body.prescription_notes ?? null,
+        status:           BookingStatus.pending,
+        medications: {
+          create: body.additional_services.map(name => ({ medicationName: name })),
+        },
       },
       select: { id: true },
     });
@@ -78,11 +79,30 @@ export async function getBookings(
   next: NextFunction
 ): Promise<void> {
   try {
-    const bookings: BookingWithPharmacy[] = await prisma.booking.findMany({
+    const rows = await prisma.booking.findMany({
       where:   { userId: req.userId! },
-      include: { pharmacy: { select: { name: true, formattedAddress: true } } },
+      include: {
+        pharmacy:    { select: { name: true, formattedAddress: true } },
+        medications: { select: { medicationName: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Flatten medications back to a string array to keep the API contract
+    // compatible with the frontend BookingWithPharmacy model.
+    const bookings = rows.map(b => ({
+      id:                b.id,
+      userId:            b.userId,
+      pharmacyId:        b.pharmacyId,
+      serviceType:       b.serviceType,
+      additionalServices: b.medications.map(m => m.medicationName),
+      prescriptionNotes: b.prescriptionNotes,
+      status:            b.status,
+      createdAt:         b.createdAt,
+      pharmacy:          b.pharmacy
+        ? { name: b.pharmacy.name, formatted_address: b.pharmacy.formattedAddress }
+        : null,
+    }));
 
     res.json({ success: true, bookings });
   } catch (err) {

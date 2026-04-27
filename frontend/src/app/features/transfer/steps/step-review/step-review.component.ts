@@ -1,20 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { TransferFormService } from '../../transfer-form.service';
 import { BookingService } from '../../../../core/services/booking.service';
-import { Pharmacy } from '../../../../core/models/booking.model';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'pw-step-review',
   standalone: false,
   template: `
-    @if (showSuccess) {
-      <div class="alert alert-success">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-        Booking confirmed! Redirecting…
-      </div>
-    }
     @if (errorMessage) {
       <div class="toast toast-error">
         <span>{{ errorMessage }}</span>
@@ -24,65 +17,127 @@ import { Pharmacy } from '../../../../core/models/booking.model';
       </div>
     }
 
-    <h2 class="step-heading">Review Your Order</h2>
-    <p class="step-subheading">Confirm the details below before submitting.</p>
+    <h2 class="step-heading">Review your transfer</h2>
+    <p class="step-subheading">Confirm the details below before submitting your request.</p>
 
+    <!-- Summary card -->
     <div class="summary-card">
 
-      <div class="summary-section">
-        <div class="summary-section-title">Service</div>
-        <div class="summary-row">
-          <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+      <!-- FOR -->
+      <div class="s-section">
+        <div class="s-section-label">For</div>
+        <div class="s-row">
+          <div class="s-avatar" aria-hidden="true">{{ initials }}</div>
           <div>
-            <div class="summary-label">Type</div>
-            <div class="summary-value">{{ serviceType || '—' }}</div>
-          </div>
-        </div>
-
-        @if (selectedServicesDisplay !== 'None') {
-          <div class="summary-row">
-            <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            <div>
-              <div class="summary-label">Add-ons</div>
-              <div class="summary-value">{{ selectedServicesDisplay }}</div>
-            </div>
-          </div>
-        }
-
-        @if (prescriptionNotes) {
-          <div class="summary-row">
-            <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-            <div>
-              <div class="summary-label">Notes</div>
-              <div class="summary-value">{{ prescriptionNotes }}</div>
-            </div>
-          </div>
-        }
-      </div>
-
-      <div class="summary-divider"></div>
-
-      <div class="summary-section">
-        <div class="summary-section-title">Pharmacy</div>
-        <div class="summary-row">
-          <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-          <div>
-            <div class="summary-label">{{ pharmacy?.name }}</div>
-            <div class="summary-value muted">{{ pharmacy?.formatted_address }}</div>
+            <div class="s-title">{{ fullName }} <span class="s-init">({{ initials }})</span></div>
+            <div class="s-sub">Primary profile</div>
           </div>
         </div>
       </div>
+
+      <div class="s-divider"></div>
+
+      <!-- FROM pharmacy -->
+      <div class="s-section">
+        <div class="s-section-label-row">
+          <div class="s-section-label">From pharmacy</div>
+          <button type="button" class="s-edit" (click)="onEditPharmacy()">Edit</button>
+        </div>
+        <div class="s-row">
+          <div class="s-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+          </div>
+          <div>
+            <div class="s-title">{{ pharmacyName }}</div>
+            <div class="s-sub">{{ pharmacyAddress }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="s-divider"></div>
+
+      <!-- TO pharmacy -->
+      <div class="s-section">
+        <div class="s-section-label">To pharmacy</div>
+        <div class="s-row">
+          <div class="s-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+          </div>
+          <div>
+            <div class="s-title">Pillway Virtual Pharmacy</div>
+            <div class="s-sub">100 King Street West, Toronto, ON M5X 1A9</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="s-divider"></div>
+
+      <!-- Medications -->
+      <div class="s-section">
+        <div class="s-section-label">Medications</div>
+        @if (isTransferAll) {
+          <div class="s-row">
+            <div class="s-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <div class="s-title">All active prescriptions</div>
+          </div>
+        } @else {
+          @for (med of medicationNames; track $index; let i = $index) {
+            <div class="s-row">
+              <div class="s-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="M8.5 8.5 16 16"/></svg>
+              </div>
+              <div class="s-title">{{ med }}</div>
+            </div>
+          }
+        }
+      </div>
+
+      @if (notes) {
+        <div class="s-divider"></div>
+        <div class="s-section">
+          <div class="s-section-label-row">
+            <div class="s-section-label">Your note for us</div>
+          </div>
+          <div class="s-row">
+            <div class="s-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            </div>
+            <div class="s-sub" style="color: var(--text)">{{ notes }}</div>
+          </div>
+        </div>
+      }
 
     </div>
 
+    <!-- Optional notes -->
+    <div class="form-field">
+      <label for="tf-notes">Additional notes <span class="opt">(optional)</span></label>
+      <textarea id="tf-notes" [formControl]="notesControl" placeholder="e.g. dosage changes, brand preferences, allergies…"></textarea>
+    </div>
+
+    <!-- Consent -->
+    <label class="consent-row" [class.is-checked]="isConsented">
+      <input type="checkbox" [formControl]="consentControl" class="consent-check" />
+      <div class="consent-box" aria-hidden="true">
+        @if (isConsented) {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+        }
+      </div>
+      <span class="consent-text">
+        I authorize Pillway to contact my current pharmacy and request the transfer of my prescriptions on my behalf.
+      </span>
+    </label>
+
     <div class="step-actions">
       <button type="button" class="btn btn-secondary" [disabled]="isSubmitting" (click)="onBack()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         Back
       </button>
-      <button type="button" class="btn btn-primary btn-lg" [disabled]="isSubmitting" (click)="onConfirm()">
+      <button type="button" class="btn btn-primary btn-lg" [disabled]="isSubmitting || !isConsented" (click)="onConfirm()">
         @if (isSubmitting) { <span class="spinner"></span> }
-        {{ isSubmitting ? 'Submitting…' : 'Confirm & Submit' }}
+        {{ isSubmitting ? 'Submitting…' : 'Confirm and Submit Transfer' }}
       </button>
     </div>
   `,
@@ -95,101 +150,196 @@ import { Pharmacy } from '../../../../core/models/booking.model';
       &:hover { opacity: 1; }
     }
 
+    .opt { font-weight: 400; color: var(--text-placeholder); font-size: .8em; text-transform: none; letter-spacing: 0; }
+
+    /* ── Summary card ── */
     .summary-card {
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      overflow: hidden;
-      margin-bottom: 1.5rem;
       background: var(--surface);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
     }
 
-    .summary-section { padding: .25rem 0; }
+    .s-section { padding: .15rem 0; }
 
-    .summary-section-title {
+    .s-section-label {
       font-size: .7rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .07em;
       color: var(--text-muted);
-      padding: .7rem 1.15rem .3rem;
+      padding: .65rem 1.15rem .3rem;
       background: var(--surface-raised);
     }
 
-    .summary-divider { height: 1px; background: var(--border); }
+    .s-section-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .65rem 1.15rem .3rem;
+      background: var(--surface-raised);
+    }
 
-    .summary-row {
+    .s-section-label-row .s-section-label {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-muted);
+      padding: 0;
+      background: none;
+    }
+
+    .s-edit {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--primary);
+      padding: 0;
+      &:hover { text-decoration: underline; }
+    }
+
+    .s-row {
       display: flex;
       align-items: flex-start;
       gap: .85rem;
-      padding: .8rem 1.15rem;
+      padding: .7rem 1.15rem;
       border-bottom: 1px solid var(--border);
       &:last-child { border-bottom: none; }
     }
 
-    .summary-icon { width: 1.05rem; height: 1.05rem; flex-shrink: 0; margin-top: .15rem; color: var(--text-muted); }
+    /* FOR section avatar */
+    .s-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: .02em;
+      margin-top: .05rem;
+    }
 
-    .summary-label { font-size: .78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .15rem; }
-    .summary-value { font-size: .9rem; color: var(--text); line-height: 1.45; &.muted { color: var(--text-muted); font-size: .82rem; } }
+    .s-init {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: .88em;
+    }
+
+    .s-icon-wrap {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      svg { width: 14px; height: 14px; color: var(--primary); }
+    }
+
+    .s-title { font-size: .9rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-top: .05rem; }
+    .s-sub   { font-size: .82rem; color: var(--text-muted); line-height: 1.45; margin-top: .1rem; }
+    .s-divider { height: 1px; background: var(--border); }
+
+    /* ── Consent ── */
+    .consent-row {
+      display: flex;
+      align-items: flex-start;
+      gap: .85rem;
+      padding: 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: border-color var(--transition), background var(--transition);
+
+      &.is-checked {
+        border-color: var(--primary);
+        background: var(--primary-light);
+      }
+    }
+
+    .consent-check { display: none; }
+
+    .consent-box {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      flex-shrink: 0;
+      margin-top: .1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      .is-checked & { background: var(--primary); border-color: var(--primary); }
+      svg { width: 13px; height: 13px; color: #fff; }
+    }
+
+    .consent-text {
+      font-size: .85rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
   `],
 })
-export class StepReviewComponent implements OnInit, OnDestroy {
-  serviceType = '';
-  selectedServicesDisplay = 'None';
-  prescriptionNotes = '';
-  pharmacy: Pharmacy | null = null;
-
+export class StepReviewComponent {
   isSubmitting = false;
-  showSuccess  = false;
   errorMessage: string | null = null;
 
-  private formSub?: Subscription;
-
   constructor(
-    private readonly formService: TransferFormService,
+    readonly formService: TransferFormService,
     private readonly bookingService: BookingService,
     private readonly router: Router,
+    private readonly authService: AuthService,
   ) {}
 
-  ngOnInit(): void {
-    this.updateSummary();
-    this.formSub = this.formService.formValue$.subscribe(() => this.updateSummary());
-  }
+  get notesControl() { return this.formService.form.get('notes') as import('@angular/forms').FormControl; }
+  get consentControl() { return this.formService.form.get('consented') as import('@angular/forms').FormControl; }
+  get isConsented(): boolean { return this.formService.form.get('consented')?.value === true; }
 
-  ngOnDestroy(): void { this.formSub?.unsubscribe(); }
+  get pharmacyName(): string { return this.formService.sourcePharmacyGroup.get('name')?.value ?? '—'; }
+  get pharmacyAddress(): string { return this.formService.sourcePharmacyGroup.get('formatted_address')?.value ?? ''; }
+  get isTransferAll(): boolean { return this.formService.form.get('transferType')?.value === 'all'; }
+  get medicationNames(): string[] { return this.formService.medicationNames; }
+  get notes(): string { return this.formService.form.get('notes')?.value ?? ''; }
 
-  private updateSummary(): void {
-    const v = this.formService.form.value as { serviceType: string; prescriptionNotes: string; pharmacy: Pharmacy };
-    this.serviceType = v.serviceType ?? '';
-    this.prescriptionNotes = v.prescriptionNotes ?? '';
-    this.pharmacy = v.pharmacy ?? null;
-    const selected = this.formService.getSelectedServices();
-    this.selectedServicesDisplay = selected.length > 0 ? selected.join(', ') : 'None';
-  }
+  get fullName(): string { return this.authService.getUserInfo()?.fullName ?? 'User'; }
+  get initials(): string { return this.authService.getUserInitials(); }
 
-  onBack(): void { this.router.navigate(['/transfer/location']); }
+  onBack(): void { this.router.navigate(['/transfer/medication']); }
+  onEditPharmacy(): void { this.router.navigate(['/transfer/pharmacy']); }
 
   onConfirm(): void {
-    if (this.isSubmitting) return;
+    if (this.isSubmitting || !this.isConsented) return;
     this.isSubmitting = true;
     this.errorMessage = null;
 
-    const v = this.formService.form.value as { serviceType: string; prescriptionNotes: string; pharmacy: Pharmacy };
+    const pharmacy = this.formService.sourcePharmacyGroup.value;
 
     this.bookingService.createBooking({
-      pharmacy:            v.pharmacy,
-      service_type:        v.serviceType,
-      additional_services: this.formService.getSelectedServices(),
-      prescription_notes:  v.prescriptionNotes || undefined,
+      pharmacy,
+      service_type:        'Transfer Prescription',
+      additional_services: this.isTransferAll ? [] : this.medicationNames,
+      prescription_notes:  this.notes || undefined,
     }).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.showSuccess = true;
         this.formService.reset();
-        setTimeout(() => this.router.navigate(['/confirmation']), 2000);
+        this.router.navigate(['/confirmation']);
       },
       error: (err: Error) => {
         this.isSubmitting = false;
-        this.errorMessage = err.message ?? 'An unexpected error occurred. Please try again.';
+        this.errorMessage = err.message ?? 'Something went wrong. Please try again.';
       },
     });
   }

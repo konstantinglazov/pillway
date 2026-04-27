@@ -65,9 +65,5 @@ export function errorHandler(
 
   // Generic / unknown errors — log fully, return minimal detail to client.
   console.error('[Server] Unhandled error:', err);
-  const body: ErrorResponse = {
-    success: false,
-    message: err instanceof Error ? err.message : 'Internal server error',
-  };
-  res.status(500).json(body);
+  res.status(500).json({ success: false, message: 'Internal server error' } satisfies ErrorResponse);
 }

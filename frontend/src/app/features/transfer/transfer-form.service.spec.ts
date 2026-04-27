@@ -18,102 +18,123 @@ describe('TransferFormService', () => {
   });
 
   describe('initial state', () => {
-    it('form starts invalid', () => {
+    it('form starts invalid (pharmacy + consent not yet set)', () => {
       expect(service.form.invalid).toBeTrue();
     });
 
-    it('additionalServicesArray has one control per option, all false', () => {
-      const arr = service.additionalServicesArray;
-      expect(arr.length).toBe(service.additionalServiceOptions.length);
-      arr.controls.forEach(ctrl => expect(ctrl.value).toBeFalse());
+    it('transferType defaults to "all"', () => {
+      expect(service.form.get('transferType')!.value).toBe('all');
+    });
+
+    it('medicationsArray starts empty', () => {
+      expect(service.medicationsArray.length).toBe(0);
+    });
+
+    it('consented defaults to false', () => {
+      expect(service.form.get('consented')!.value).toBeFalse();
+    });
+  });
+
+  describe('sourcePharmacyGroup', () => {
+    it('exposes the pharmacy sub-group', () => {
+      expect(service.sourcePharmacyGroup).toBeTruthy();
+      expect(service.sourcePharmacyGroup.contains('name')).toBeTrue();
+      expect(service.sourcePharmacyGroup.contains('lat')).toBeTrue();
+      expect(service.sourcePharmacyGroup.contains('place_id')).toBeTrue();
+    });
+  });
+
+  describe('addMedication / removeMedication / medicationNames', () => {
+    it('adds a medication name', () => {
+      service.addMedication('Metformin 500mg');
+      expect(service.medicationNames).toEqual(['Metformin 500mg']);
+    });
+
+    it('adds multiple medications', () => {
+      service.addMedication('Med A');
+      service.addMedication('Med B');
+      expect(service.medicationNames).toEqual(['Med A', 'Med B']);
+    });
+
+    it('removes a medication by index', () => {
+      service.addMedication('Med A');
+      service.addMedication('Med B');
+      service.removeMedication(0);
+      expect(service.medicationNames).toEqual(['Med B']);
     });
   });
 
   describe('getStepValid()', () => {
-    it('step 1 is invalid when serviceType is empty', () => {
+    it('step 1 is invalid when sourcePharmacy is empty', () => {
       expect(service.getStepValid(1)).toBeFalse();
     });
 
-    it('step 1 is valid after setting serviceType', () => {
-      service.form.get('serviceType')!.setValue('Transfer Prescription');
-      expect(service.getStepValid(1)).toBeTrue();
-    });
-
-    it('step 2 is invalid when pharmacy group is empty', () => {
-      expect(service.getStepValid(2)).toBeFalse();
-    });
-
-    it('step 2 is valid when all pharmacy fields are filled', () => {
-      service.pharmacyGroup.patchValue({
+    it('step 1 is valid when all pharmacy fields are filled', () => {
+      service.sourcePharmacyGroup.patchValue({
         name: 'Test Pharmacy',
         formatted_address: '123 Main St',
         lat: 43.65,
         lng: -79.38,
         place_id: 'place_123',
       });
+      expect(service.getStepValid(1)).toBeTrue();
+    });
+
+    it('step 2 is valid when transferType is set (defaults to "all")', () => {
       expect(service.getStepValid(2)).toBeTrue();
     });
 
-    it('step 3 requires both serviceType and pharmacy to be valid', () => {
+    it('step 2 is invalid if transferType is cleared', () => {
+      service.form.get('transferType')!.setValue('');
+      expect(service.getStepValid(2)).toBeFalse();
+    });
+
+    it('step 3 is invalid before consent', () => {
       expect(service.getStepValid(3)).toBeFalse();
+    });
 
-      service.form.get('serviceType')!.setValue('Refill');
-      service.pharmacyGroup.patchValue({
-        name: 'P', formatted_address: 'A', lat: 1, lng: 2, place_id: 'x',
-      });
+    it('step 3 is valid after consent is given', () => {
+      service.form.get('consented')!.setValue(true);
       expect(service.getStepValid(3)).toBeTrue();
-    });
-  });
-
-  describe('getSelectedServices()', () => {
-    it('returns empty array when no services are checked', () => {
-      expect(service.getSelectedServices()).toEqual([]);
-    });
-
-    it('returns names of checked services by index', () => {
-      service.additionalServicesArray.at(0).setValue(true);
-      service.additionalServicesArray.at(2).setValue(true);
-      expect(service.getSelectedServices()).toEqual(['Blister Pack', 'Delivery']);
-    });
-
-    it('returns middle service when only that is checked', () => {
-      service.additionalServicesArray.at(1).setValue(true);
-      expect(service.getSelectedServices()).toEqual(['Auto-Refill']);
     });
   });
 
   describe('reset()', () => {
     beforeEach(() => {
-      service.form.get('serviceType')!.setValue('Refill');
-      service.pharmacyGroup.patchValue({
+      service.sourcePharmacyGroup.patchValue({
         name: 'Demo', formatted_address: 'Addr', lat: 1, lng: 2, place_id: 'pid',
       });
-      service.additionalServicesArray.at(1).setValue(true);
-      service.form.get('prescriptionNotes')!.setValue('Some notes');
-    });
-
-    it('clears serviceType', () => {
-      service.reset();
-      expect(service.form.get('serviceType')!.value).toBe('');
+      service.addMedication('Med X');
+      service.form.get('notes')!.setValue('Some notes');
+      service.form.get('consented')!.setValue(true);
+      service.form.get('transferType')!.setValue('specific');
     });
 
     it('clears all pharmacy fields', () => {
       service.reset();
-      expect(service.pharmacyGroup.get('name')!.value).toBe('');
-      expect(service.pharmacyGroup.get('place_id')!.value).toBe('');
-      expect(service.pharmacyGroup.get('lat')!.value).toBeNull();
+      expect(service.sourcePharmacyGroup.get('name')!.value).toBe('');
+      expect(service.sourcePharmacyGroup.get('place_id')!.value).toBe('');
+      expect(service.sourcePharmacyGroup.get('lat')!.value).toBeNull();
     });
 
-    it('resets all additionalServices to false', () => {
+    it('clears medications array', () => {
       service.reset();
-      service.additionalServicesArray.controls.forEach(ctrl =>
-        expect(ctrl.value).toBeFalse()
-      );
+      expect(service.medicationsArray.length).toBe(0);
     });
 
-    it('clears prescriptionNotes', () => {
+    it('resets transferType to "all"', () => {
       service.reset();
-      expect(service.form.get('prescriptionNotes')!.value).toBe('');
+      expect(service.form.get('transferType')!.value).toBe('all');
+    });
+
+    it('clears notes', () => {
+      service.reset();
+      expect(service.form.get('notes')!.value).toBe('');
+    });
+
+    it('resets consented to false', () => {
+      service.reset();
+      expect(service.form.get('consented')!.value).toBeFalse();
     });
 
     it('leaves form invalid after reset', () => {
@@ -128,7 +149,7 @@ describe('TransferFormService', () => {
         expect(value).toBeTruthy();
         done();
       });
-      service.form.get('serviceType')!.setValue('New Prescription');
+      service.form.get('notes')!.setValue('hello');
     });
   });
 });

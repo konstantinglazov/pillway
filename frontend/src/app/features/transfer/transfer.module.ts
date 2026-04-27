@@ -4,9 +4,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 import { TransferComponent } from './transfer.component';
-import { StepPreferencesComponent } from './steps/step-preferences/step-preferences.component';
-import { StepLocationComponent } from './steps/step-location/step-location.component';
+import { StepIntroComponent } from './steps/step-intro/step-intro.component';
+import { StepPharmacyComponent } from './steps/step-pharmacy/step-pharmacy.component';
+import { StepPharmacyConfirmComponent } from './steps/step-pharmacy-confirm/step-pharmacy-confirm.component';
+import { StepMedicationComponent } from './steps/step-preferences/step-preferences.component';
 import { StepReviewComponent } from './steps/step-review/step-review.component';
+import { StepSelectProfileComponent } from './steps/step-select-profile/step-select-profile.component';
 import { TransferFormService } from './transfer-form.service';
 
 const routes: Routes = [
@@ -14,10 +17,13 @@ const routes: Routes = [
     path: '',
     component: TransferComponent,
     children: [
-      { path: '', redirectTo: 'preferences', pathMatch: 'full' },
-      { path: 'preferences', component: StepPreferencesComponent },
-      { path: 'location', component: StepLocationComponent },
-      { path: 'review', component: StepReviewComponent },
+      { path: '',               redirectTo: 'intro', pathMatch: 'full' },
+      { path: 'intro',          component: StepIntroComponent },
+      { path: 'select-profile', component: StepSelectProfileComponent },
+      { path: 'pharmacy',       component: StepPharmacyComponent },
+      { path: 'confirm',        component: StepPharmacyConfirmComponent },
+      { path: 'medication',     component: StepMedicationComponent },
+      { path: 'review',         component: StepReviewComponent },
     ],
   },
 ];
@@ -25,8 +31,11 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     TransferComponent,
-    StepPreferencesComponent,
-    StepLocationComponent,
+    StepIntroComponent,
+    StepSelectProfileComponent,
+    StepPharmacyComponent,
+    StepPharmacyConfirmComponent,
+    StepMedicationComponent,
     StepReviewComponent,
   ],
   imports: [
@@ -35,8 +44,6 @@ const routes: Routes = [
     RouterModule.forChild(routes),
   ],
   providers: [
-    // TransferFormService is scoped to TransferModule so it is created once
-    // for the lifetime of the transfer flow and destroyed on exit.
     TransferFormService,
   ],
 })

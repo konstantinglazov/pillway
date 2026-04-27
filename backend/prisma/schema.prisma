@@ -39,18 +39,29 @@ model Pharmacy {
 }
 
 model Booking {
-  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String        @map("user_id") @db.Uuid
-  pharmacyId         String        @map("pharmacy_id") @db.Uuid
-  serviceType        String        @map("service_type")
-  additionalServices String[]      @map("additional_services")
-  prescriptionNotes  String?       @map("prescription_notes")
-  status             BookingStatus @default(pending)
-  createdAt          DateTime      @default(now()) @map("created_at")
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  pharmacyId        String        @map("pharmacy_id") @db.Uuid
+  serviceType       String        @map("service_type")
+  prescriptionNotes String?       @map("prescription_notes")
+  status            BookingStatus @default(pending)
+  createdAt         DateTime      @default(now()) @map("created_at")
 
-  user     User     @relation(fields: [userId],     references: [id], onDelete: Cascade)
-  pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id])
+  user        User        @relation(fields: [userId],     references: [id], onDelete: Cascade)
+  pharmacy    Pharmacy    @relation(fields: [pharmacyId], references: [id])
+  medications Medication[]
 
   @@index([userId])
   @@map("bookings")
+}
+
+model Medication {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId      String  @map("booking_id") @db.Uuid
+  medicationName String  @map("medication_name")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("booking_medications")
 }

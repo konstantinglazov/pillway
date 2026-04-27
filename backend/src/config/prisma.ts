@@ -1,38 +1,30 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 /**
- * Singleton PrismaClient using the @prisma/adapter-pg driver adapter.
- *
- * Prisma 7 removed built-in connection handling — the caller owns the
- * connection pool and passes it via an adapter.  A single Pool instance is
- * shared for the lifetime of the process so connections are reused.
- *
- * DATABASE_URL may be the pooled (PgBouncer) URL — the adapter works with
- * both pooled and direct connections at runtime.
+ * Singleton PrismaClient for PostgreSQL (Supabase).
+ * Prisma 7 uses the "client" engine type for PostgreSQL, which requires a
+ * driver adapter. DATABASE_URL is read from the environment.
+ * The singleton pattern prevents multiple connection pools during
+ * ts-node-dev hot reloads in development.
  */
-
 declare global {
-  // Survives ts-node-dev hot-reloads in development.
   // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
 }
 
-function createPrismaClient(): PrismaClient {
-  const pool = new Pool({ connectionString: process.env['DATABASE_URL'] });
-  const adapter = new PrismaPg(pool);
+function createClient(): PrismaClient {
+  const adapter = new PrismaPg({ connectionString: process.env['DATABASE_URL'] });
   return new PrismaClient({
     adapter,
-    log: process.env['NODE_ENV'] === 'production' ? ['error'] : ['query', 'warn', 'error'],
+    log: process.env['NODE_ENV'] === 'production' ? ['error'] : ['warn', 'error'],
   });
 }
 
-export const prisma: PrismaClient =
-  global.__prisma ?? createPrismaClient();
+export const prisma: PrismaClient = global.__prisma ?? createClient();
 
 if (process.env['NODE_ENV'] !== 'production') {
   global.__prisma = prisma;

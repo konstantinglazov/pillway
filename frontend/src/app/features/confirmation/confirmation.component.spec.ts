@@ -26,9 +26,9 @@ describe('ConfirmationComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('newBooking()', () => {
+  describe('done()', () => {
     it('navigates to /transfer', () => {
-      component.newBooking();
+      component.done();
       expect(routerSpy.navigate).toHaveBeenCalledWith(['/transfer']);
     });
   });

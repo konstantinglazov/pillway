@@ -1,14 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { StepPreferencesComponent } from './step-preferences.component';
+import { StepMedicationComponent } from './step-preferences.component';
 import { TransferFormService } from '../../transfer-form.service';
 
-describe('StepPreferencesComponent', () => {
-  let component: StepPreferencesComponent;
-  let fixture: ComponentFixture<StepPreferencesComponent>;
+describe('StepMedicationComponent', () => {
+  let component: StepMedicationComponent;
+  let fixture: ComponentFixture<StepMedicationComponent>;
   let formService: TransferFormService;
   let routerSpy: jasmine.SpyObj<Router>;
 
@@ -16,8 +15,8 @@ describe('StepPreferencesComponent', () => {
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
-      declarations: [StepPreferencesComponent],
-      imports: [ReactiveFormsModule, NoopAnimationsModule],
+      declarations: [StepMedicationComponent],
+      imports: [ReactiveFormsModule],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         TransferFormService,
@@ -25,7 +24,7 @@ describe('StepPreferencesComponent', () => {
       ],
     }).compileComponents();
 
-    fixture     = TestBed.createComponent(StepPreferencesComponent);
+    fixture     = TestBed.createComponent(StepMedicationComponent);
     component   = fixture.componentInstance;
     formService = TestBed.inject(TransferFormService);
     fixture.detectChanges();
@@ -35,33 +34,71 @@ describe('StepPreferencesComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('exposes 3 serviceOptions', () => {
-    expect(component.serviceOptions.length).toBe(3);
+  describe('transferType getter', () => {
+    it('returns "all" by default', () => {
+      expect(component.transferType).toBe('all');
+    });
+
+    it('reflects form value change to "specific"', () => {
+      formService.form.get('transferType')!.setValue('specific');
+      expect(component.transferType).toBe('specific');
+    });
   });
 
-  describe('additionalServicesControls', () => {
-    it('returns controls from the formService array', () => {
-      expect(component.additionalServicesControls.length)
-        .toBe(formService.additionalServiceOptions.length);
+  describe('addMedication()', () => {
+    it('adds a trimmed medication name to the form service', () => {
+      component.newMedName = '  Metformin 500mg  ';
+      component.addMedication();
+      expect(formService.medicationNames).toEqual(['Metformin 500mg']);
+    });
+
+    it('clears newMedName after adding', () => {
+      component.newMedName = 'Aspirin';
+      component.addMedication();
+      expect(component.newMedName).toBe('');
+    });
+
+    it('does nothing when newMedName is blank', () => {
+      component.newMedName = '   ';
+      component.addMedication();
+      expect(formService.medicationNames.length).toBe(0);
+    });
+  });
+
+  describe('removeMedication()', () => {
+    it('removes the medication at the given index', () => {
+      formService.addMedication('Med A');
+      formService.addMedication('Med B');
+      component.removeMedication(0);
+      expect(formService.medicationNames).toEqual(['Med B']);
     });
   });
 
   describe('onNext()', () => {
-    it('shows error and marks serviceType touched when step is invalid', () => {
+    it('navigates to /transfer/review when transferType is "all"', () => {
       component.onNext();
-
-      expect(component.showError).toBeTrue();
-      expect(formService.form.get('serviceType')!.touched).toBeTrue();
-      expect(routerSpy.navigate).not.toHaveBeenCalled();
+      expect(routerSpy.navigate).toHaveBeenCalledWith(['/transfer/review']);
     });
 
-    it('navigates to /transfer/location when step is valid', () => {
-      formService.form.get('serviceType')!.setValue('Refill');
-
+    it('navigates to /transfer/review when "specific" and medications are added', () => {
+      formService.form.get('transferType')!.setValue('specific');
+      formService.addMedication('Lipitor');
       component.onNext();
+      expect(routerSpy.navigate).toHaveBeenCalledWith(['/transfer/review']);
+    });
 
-      expect(component.showError).toBeFalse();
-      expect(routerSpy.navigate).toHaveBeenCalledWith(['/transfer/location']);
+    it('shows error and does NOT navigate when "specific" but no medications added', () => {
+      formService.form.get('transferType')!.setValue('specific');
+      component.onNext();
+      expect(component.showError).toBeTrue();
+      expect(routerSpy.navigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onBack()', () => {
+    it('navigates to /transfer/confirm', () => {
+      component.onBack();
+      expect(routerSpy.navigate).toHaveBeenCalledWith(['/transfer/confirm']);
     });
   });
 });

@@ -80,7 +80,7 @@ describe('errorHandler middleware', () => {
   });
 
   describe('generic Error', () => {
-    it('responds 500 with the error message', () => {
+    it('responds 500 with a generic message (never leaks err.message)', () => {
       const err = new Error('Something went wrong');
 
       const { status, json, res } = mockRes();
@@ -88,7 +88,7 @@ describe('errorHandler middleware', () => {
 
       expect(status).toHaveBeenCalledWith(500);
       expect(json).toHaveBeenCalledWith(
-        expect.objectContaining({ success: false, message: 'Something went wrong' })
+        expect.objectContaining({ success: false, message: 'Internal server error' })
       );
     });
 

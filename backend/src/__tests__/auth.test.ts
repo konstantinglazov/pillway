@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { Prisma } from '@prisma/client';
 import app from '../index';
 
 jest.mock('../config/prisma', () => ({
@@ -41,7 +42,12 @@ describe('POST /auth/register', () => {
   });
 
   it('returns 409 when email is already registered', async () => {
-    users.findUnique.mockResolvedValue({ id: 'existing' });
+    users.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed on email', {
+        code: 'P2002',
+        clientVersion: '7.0.0',
+      })
+    );
 
     const res = await request(app).post('/auth/register').send({
       email: 'test@test.com', password: 'password123',

@@ -59,7 +59,10 @@ import { ThemeService } from '../../core/services/theme.service';
           </div>
 
           @if (errorMessage) {
-            <div class="alert alert-error" role="alert">⚠ {{ errorMessage }}</div>
+            <div class="alert alert-error" role="alert">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:16px;height:16px;flex-shrink:0;margin-top:.1rem"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ errorMessage }}
+            </div>
           }
 
           <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -120,7 +123,7 @@ import { ThemeService } from '../../core/services/theme.service';
 
     .auth-brand {
       flex: 0 0 290px;
-      background: linear-gradient(160deg, #1e40af 0%, #2563eb 65%, #3b82f6 100%);
+      background: linear-gradient(160deg, #b83218 0%, #DC4127 60%, #e05a3a 100%);
       color: #fff;
       padding: 2.75rem 2rem;
       display: flex;
